@@ -123,7 +123,8 @@
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.6.1</version>
         </plugin>
-        <!-- Plugin do uruchamiania w cmd => 'mvn -q exec:java' (trzeba to wpisać)-->
+        <!-- Plugin to run in cmd => 'mvn -q exec:java' -->
+        <!-- Works only if 'mvn compile' executed before-->
         <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
