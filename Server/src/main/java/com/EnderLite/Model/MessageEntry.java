@@ -1,4 +1,6 @@
-import java.sql.Date;
+package com.EnderLite.Model;
+
+import java.util.Date;
 
 public class MessageEntry {
     public User Sender;
