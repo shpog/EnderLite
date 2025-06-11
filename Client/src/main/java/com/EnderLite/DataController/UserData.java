@@ -2,7 +2,9 @@ package com.EnderLite.DataController;
 
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 enum Rank{
@@ -10,17 +12,75 @@ enum Rank{
     ADMIN
 }
 
-record ChatData(String chatId, Rank rand) {
-    //Default
+class ChatData{
+    private String chatId;
+    private Rank rank;
+
+    ChatData(String chatId, Rank rank){
+        this.chatId = chatId;
+        this.rank = rank;
+    }
+
+    //chatId
+    public String getId(){
+        return this.chatId;
+    }
+
+    public void setId(String id){
+        this.chatId = id;
+    }
+
+    //rank
+    public void setRank(Rank rank){
+        this.rank = rank;
+    }
+
+    public Rank getRank(){
+        return this.rank;
+    }
+
+    //checks only serwer name, because one user can't have 2
+    //different ranks at the same time
+    @Override
+    public boolean equals(Object ob){
+
+        if ( ob == this ){
+            return true;
+        }
+
+        if ( !(ob instanceof ChatData) ){
+            return false;
+        }
+
+        ChatData other = (ChatData)ob;
+        return other.getId().equals( this.chatId );
+    }
 }
 
 
 public class UserData {
 
-    private StringProperty login;
-    private StringProperty email;
-    private ListProperty<String> friendsList = new SimpleListProperty<String>();
-    private ListProperty<ChatData> chatsList = new SimpleListProperty<ChatData>();
+    UserData(){
+        this.login.set("");
+        this.email.set("");
+    }
+
+    UserData(String login, String email){
+        this.login.set(login);
+        this.email.set(email);
+    }
+
+    private StringProperty login = new SimpleStringProperty();
+    private StringProperty email = new SimpleStringProperty();
+    private ListProperty<String> friendsList;
+    private ListProperty<ChatData> chatsList;
+
+    {
+        ObservableList<String> observListFriends = FXCollections.observableArrayList();
+        friendsList = new SimpleListProperty<String>(observListFriends);
+        ObservableList<ChatData> observListChats = FXCollections.observableArrayList();
+        chatsList = new SimpleListProperty<ChatData>(observListChats);
+    }
     
     //login
     public StringProperty getLoginProperty(){
@@ -57,9 +117,24 @@ public class UserData {
         friendsList.add(login);
     }
 
+    public boolean removeFriend(String login){
+        return friendsList.remove(login);
+    }
+
+    public boolean changeFriendLogin(String oldLogin, String newLogin){
+        int oldIndex = friendsList.indexOf(oldLogin);
+        if ( -1 == oldIndex){
+            return false;
+        }
+
+        friendsList.set(oldIndex, newLogin);
+        return true;
+    }
+
     public ObservableList<String> getFriendsList(){
         return friendsList.get();
     }
+
 
     //chatList
     public ListProperty<ChatData> getChatListProperty(){
@@ -68,6 +143,37 @@ public class UserData {
 
     public void addChat(String chatId, Rank rank){
         chatsList.add(new ChatData(chatId, rank));
+    }
+
+    public boolean removeChat(String chatId){
+        return chatsList.remove(new ChatData(chatId, null));
+    }
+
+    public Rank getChatRank(String chatId){
+        int index = chatsList.indexOf(new ChatData(chatId, null));
+        return chatsList.get(index).getRank();
+    }
+
+    public boolean changeChatRank(String oldChatId, Rank rank){
+        int oldIndex = chatsList.indexOf(new ChatData(oldChatId, null));
+        if ( -1 == oldIndex ){
+            return false;
+        }
+
+        ChatData old = chatsList.get(oldIndex);
+        old.setRank( rank);
+        return true;
+    }
+
+    public boolean changeChatName(String oldChatId, String newChatId){
+        int oldIndex = chatsList.indexOf(new ChatData(oldChatId, null));
+        if ( -1 == oldIndex ){
+            return false;
+        }
+
+        ChatData old = chatsList.get(oldIndex);
+        old.setId( newChatId);
+        return true;
     }
 
     public ObservableList<ChatData> getChatList(){
