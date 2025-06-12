@@ -6,19 +6,21 @@ import java.io.PrintWriter;
 
 public class Logger {
     private static volatile Logger instance;
-    private String infoType = "[LOG] ";
-    private String errorType = "[Error] ";
+    private final String infoType = "[LOG] ";
+    private final String errorType = "[Error] ";
     private FileWriter fileOut;
     private PrintWriter cmdOut;
-    private String fileName = "log.txt";
+    private final String fileName = "log.txt";
 
     private Logger(){
+        cmdOut = new PrintWriter(System.err, true);
         try{
-            fileOut = new FileWriter(fileName);
-            cmdOut = new PrintWriter(System.out, true);
-        } catch (IOException e){
-            System.err.println("Error creating loggerFile!\nOnly console messages!");
+            fileOut = new FileWriter(fileName, false);
+            fileOut.close();
+        } catch (IOException e) {
+            cmdOut.println("Error while overwriting " + fileName);
         }
+
     }
 
     public static Logger getLogger(){
@@ -35,20 +37,28 @@ public class Logger {
     }
 
     synchronized public void logInfo(String info){
-        cmdOut.println(infoType + info);
+        String mesg = infoType + info;
+
+        cmdOut.println(mesg);
         try{
-            fileOut.write(infoType + info);
+            fileOut = new FileWriter(fileName, true);
+            fileOut.write("\n" + mesg);
+            fileOut.close();
         } catch (IOException e){
             System.err.println("Error while writing to " + fileName);
         }
     }
 
     synchronized public void logError(String error){
-        cmdOut.println(errorType + error);
+        String mesg = errorType + error;
+        cmdOut.println(mesg);
         try{
-            fileOut.write(errorType + error);
+            fileOut = new FileWriter(fileName, true);
+            fileOut.write("\n" + mesg);
+            fileOut.close();
         } catch (IOException e){
             System.err.println("Error while writing to " + fileName);
         }
     }
+
 }
