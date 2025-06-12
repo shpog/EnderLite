@@ -7,57 +7,6 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-enum Rank{
-    USER,
-    ADMIN
-}
-
-class ChatData{
-    private String chatId;
-    private Rank rank;
-
-    ChatData(String chatId, Rank rank){
-        this.chatId = chatId;
-        this.rank = rank;
-    }
-
-    //chatId
-    public String getId(){
-        return this.chatId;
-    }
-
-    public void setId(String id){
-        this.chatId = id;
-    }
-
-    //rank
-    public void setRank(Rank rank){
-        this.rank = rank;
-    }
-
-    public Rank getRank(){
-        return this.rank;
-    }
-
-    //checks only serwer name, because one user can't have 2
-    //different ranks at the same time
-    @Override
-    public boolean equals(Object ob){
-
-        if ( ob == this ){
-            return true;
-        }
-
-        if ( !(ob instanceof ChatData) ){
-            return false;
-        }
-
-        ChatData other = (ChatData)ob;
-        return other.getId().equals( this.chatId );
-    }
-}
-
-
 public class UserData {
 
     UserData(){
@@ -72,6 +21,7 @@ public class UserData {
 
     private StringProperty login = new SimpleStringProperty();
     private StringProperty email = new SimpleStringProperty();
+    private StringProperty passw = new SimpleStringProperty();
     private ListProperty<String> friendsList;
     private ListProperty<ChatData> chatsList;
 
@@ -80,6 +30,19 @@ public class UserData {
         friendsList = new SimpleListProperty<String>(observListFriends);
         ObservableList<ChatData> observListChats = FXCollections.observableArrayList();
         chatsList = new SimpleListProperty<ChatData>(observListChats);
+    }
+
+    //passw
+    public StringProperty getPasswProperty(){
+        return passw;
+    }
+
+    public void setPassw(String newPassw){
+        passw.set(newPassw);
+    }
+
+    public String getPassw(){
+        return passw.get();
     }
     
     //login
