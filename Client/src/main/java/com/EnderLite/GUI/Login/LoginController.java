@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import com.EnderLite.Client;
 import com.EnderLite.DataController.DataController;
+import com.EnderLite.DataController.ApiMessages.ResponseStatus;
 import com.EnderLite.GUI.AccountCreator.AccountCreatorController;
 import com.EnderLite.GUI.MainView.MainViewController;
 import com.EnderLite.GUI.Utils.LabelUtil;
@@ -67,11 +68,35 @@ public class LoginController{
             public void handle(MouseEvent event){
                 if (checkCredentials()){
                     DataController dataController = DataController.getDataController();
-                    dataController.setCredensial("test ", "test");
+                    dataController.reqUserData();
+                    ResponseStatus status = null;
                     try{
-                        handleSwitchToMainView();
-                    } catch (IOException e){
-                        Logger.getLogger().logError("Error while changing from login to main view");
+                        status = waithForAuth(dataController);
+                    } catch (InterruptedException e){
+                        Logger.getLogger().logError("Interrupt exception login (waitForAuth)");
+                    }
+                    
+                    
+                    if (status == null){
+                        badPassw.setText("Błąd połączenia! Spróbuj ponownie");
+                        badPassw.setVisible(true);
+                        passwField.setText("");
+
+                        badLoginEmail.setText("Błąd połączenia! Spróbuj ponownie");
+                        badLoginEmail.setVisible(true);
+                    } else if (status == ResponseStatus.ACCEPTED){
+                        try{
+                            handleSwitchToMainView();
+                        } catch (IOException e){
+                            Logger.getLogger().logError("Error while changing from login to main view");
+                        }
+                    } else {
+                        badPassw.setText("Błędne dane!");
+                        badPassw.setVisible(true);
+                        passwField.setText("");
+
+                        badLoginEmail.setText("Błędne dane!");
+                        badLoginEmail.setVisible(true);
                     }
                 }
             }
@@ -96,9 +121,9 @@ public class LoginController{
 
 
     private boolean checkCredentials(){
-        String passw;
-        String login;
-        String email;
+        String passw = null;
+        String login = null;
+        String email = null;
         boolean dataReady = true;
 
         if ( TextFieldUtil.checkIfEmpty(loginField) ){
@@ -119,14 +144,31 @@ public class LoginController{
             }
 
             passw = passwField.getText();
-            /*
-             * TODO
-             */
+            DataController dataController = DataController.getDataController();
+            dataController.setCredensial(login, email);
+            dataController.reqAuth(login, email, passw);
         } else {
             dataReady = LabelUtil.setEmptyAndVisible(badPassw);
         }
 
         return dataReady;
+    }
+
+    private ResponseStatus waithForAuth(DataController dataController) throws InterruptedException{
+        long startTime = System.currentTimeMillis();
+        final long TIMEOUT = 1000;
+        final long INTERVAL = 50;
+
+        while (System.currentTimeMillis() - startTime < TIMEOUT){
+            ResponseStatus status = dataController.getAuthStatus();
+
+            if (status == ResponseStatus.ACCEPTED || status == ResponseStatus.DENIED)
+                return status;
+            
+            Thread.sleep(INTERVAL);
+        }
+
+        return null;
     }
 
     private void handleSwitchToMainView() throws IOException{

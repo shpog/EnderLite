@@ -1,10 +1,11 @@
 package com.EnderLite.GUI.MainView;
 
 import java.io.IOException;
-import java.lang.classfile.Label;
+import java.time.LocalTime;
 
 import com.EnderLite.Client;
 import com.EnderLite.DataController.ChatData;
+import com.EnderLite.DataController.DataController;
 import com.EnderLite.GUI.Login.LoginController;
 import com.EnderLite.GUI.Settings.SettingsController;
 import com.EnderLite.Logger.Logger;
@@ -15,10 +16,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class MainViewController {
@@ -32,6 +36,8 @@ public class MainViewController {
     //messages (middle)
     @FXML
     private ScrollPane chatScrollPane;
+    @FXML
+    private VBox messContVBox;
     @FXML
     private TextField messageField;
     @FXML
@@ -51,7 +57,11 @@ public class MainViewController {
 
     @FXML
     public void initialize(){
-        
+        //Initialize User label
+        loginLabel.textProperty().bind(DataController.getDataController().getUserData().getLoginProperty());
+        DataController.getDataController().setMainViewController(this);
+
+        //Initialize control buttons
         EventHandler<MouseEvent> logout = new EventHandler<MouseEvent>() {
 
             @Override
@@ -79,6 +89,45 @@ public class MainViewController {
         };
 
         settingsButton.setOnMouseClicked(settings);
+
+        //initialize ListView
+        chatsListView.setEditable(true);
+        chatsListView.setItems(DataController.getDataController().getUserChatsList());
+        chatsListView.setCellFactory( (ListView<ChatData> l) -> new ChatsCell());
+
+        friendsListView.setEditable(true);
+        friendsListView.setItems(DataController.getDataController().getUserFriendList());
+        friendsListView.setCellFactory( (ListView<String> l) -> new FriendsCell());
+
+        //MessageChatConfiguration
+    }
+
+    static class ChatsCell extends ListCell<ChatData> {
+
+        @Override
+        public void updateItem(ChatData item, boolean empty){
+            super.updateItem(item, empty);
+            /*
+             * TODO
+             */
+        }
+    }
+
+    static class FriendsCell extends ListCell<String> {
+
+        @Override
+        public void updateItem(String item, boolean empty){
+            super.updateItem(item, empty);
+            /*
+             * TODO
+             */
+        }
+    }
+
+    public void addMessage(String message, String login, LocalTime time){
+        /*
+         * TODO
+         */
     }
 
 

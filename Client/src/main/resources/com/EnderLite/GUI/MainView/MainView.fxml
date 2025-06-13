@@ -22,7 +22,7 @@
                         <Font size="21.0" />
                      </font>
                   </Label>
-                  <ListView fx:id="chatsListView" prefHeight="533.0" prefWidth="187.0" />
+                  <ListView fx:id="chatsListView" editable="true" prefHeight="533.0" prefWidth="187.0" />
                   <Button fx:id="addChat" alignment="CENTER" mnemonicParsing="false" prefHeight="58.0" prefWidth="187.0" text="Add Chat">
                      <font>
                         <Font size="18.0" />
@@ -32,7 +32,10 @@
             </VBox>
             <VBox prefHeight="600.0" prefWidth="616.0">
                <children>
-                  <ScrollPane fx:id="chatScrollPane" prefHeight="572.0" prefWidth="615.0" />
+                  <ScrollPane fx:id="chatScrollPane" fitToWidth="true" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="557.0" prefWidth="614.0">
+                     <content>
+                        <VBox fx:id="messContVBox" prefHeight="525.0" prefWidth="612.0" />
+                     </content></ScrollPane>
                   <HBox prefHeight="100.0" prefWidth="200.0">
                      <children>
                         <TextField fx:id="messageFIeld" prefHeight="51.0" prefWidth="484.0" promptText="Type message here">
@@ -87,7 +90,7 @@
                         <Font size="17.0" />
                      </font>
                   </Label>
-                  <ListView fx:id="friendsListView" prefHeight="459.0" prefWidth="198.0" />
+                  <ListView fx:id="friendsListView" editable="true" prefHeight="459.0" prefWidth="198.0" />
                   <Button fx:id="addFriendButton" mnemonicParsing="false" prefHeight="58.0" prefWidth="198.0" text="Add friend">
                      <font>
                         <Font size="18.0" />

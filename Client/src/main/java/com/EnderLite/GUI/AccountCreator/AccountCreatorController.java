@@ -4,6 +4,8 @@ package com.EnderLite.GUI.AccountCreator;
 import java.io.IOException;
 
 import com.EnderLite.Client;
+import com.EnderLite.DataController.DataController;
+import com.EnderLite.DataController.ApiMessages.ResponseStatus;
 import com.EnderLite.GUI.MainView.MainViewController;
 import com.EnderLite.GUI.Utils.LabelUtil;
 import com.EnderLite.GUI.Utils.TextFieldUtil;
@@ -60,16 +62,14 @@ public class AccountCreatorController {
             
             @Override
             public void handle(MouseEvent event){
-                try{
-                    /*
-                     * TODO
-                     */
-                    checkData();
-                    if ( requestAccountCreate() ){
-                        handleSwitchToMainView();
+                if (checkData()){
+                    try{
+                        if (requestAccountCreate() ){
+                            handleSwitchToMainView();
+                        }
+                    } catch (IOException e) {
+                        Logger.getLogger().logError("Error while switching from AccountCreator to MainView");
                     }
-                } catch (IOException e) {
-                    Logger.getLogger().logError("Error while switching from accountCreator to MainView");
                 }
             }
         };
@@ -81,10 +81,59 @@ public class AccountCreatorController {
         String login = loginCreateField.getText();
         String passw = passwCreateField.getText();
         String email = emailField.getText();
-        /*
-         * TODO
-         */
-        return true;
+        DataController dataController = DataController.getDataController();
+        dataController.setCredensial(loginCreateField.getText(), emailField.getText());
+        dataController.reqCreateUser(login, email, passw);
+        ResponseStatus status = null;
+        try{
+            status = waithForAuth(dataController);
+        } catch (InterruptedException e){
+            Logger.getLogger().logError("Interrupt exception AccountCreate (waitForAuth)");
+        }
+
+        if (status == null){
+            badLoginLabel.setText("Błąd połączenia! Spróbuj ponownie");
+            badLoginLabel.setVisible(true);
+            badEmailLabel.setVisible(false);
+            badEmailRepeatLabel.setVisible(false);
+            badPasswLabel.setVisible(false);
+            badPasswRepeatLabel.setVisible(false);
+        } else if (status == ResponseStatus.ACCEPTED){
+            return true;
+        } else if (status == ResponseStatus.LOGIN){
+            badLoginLabel.setText("Login już jest zajęty!");
+            badLoginLabel.setVisible(true);
+            badEmailLabel.setVisible(false);
+            badEmailRepeatLabel.setVisible(false);
+            badPasswLabel.setVisible(false);
+            badPasswRepeatLabel.setVisible(false);
+        } else if (status == ResponseStatus.EMAIL){
+            badEmailLabel.setText("Email już jest zajęty!");
+            badEmailLabel.setVisible(true);
+            badLoginLabel.setVisible(false);
+            badEmailRepeatLabel.setVisible(false);
+            badPasswLabel.setVisible(false);
+            badPasswRepeatLabel.setVisible(false);
+        }
+        
+        return false;
+    }
+
+     private ResponseStatus waithForAuth(DataController dataController) throws InterruptedException{
+        long startTime = System.currentTimeMillis();
+        final long TIMEOUT = 1000;
+        final long INTERVAL = 50;
+
+        while (System.currentTimeMillis() - startTime < TIMEOUT){
+            ResponseStatus status = dataController.getAuthStatus();
+
+            if (status == ResponseStatus.ACCEPTED || status == ResponseStatus.DENIED)
+                return status;
+            
+            Thread.sleep(INTERVAL);
+        }
+
+        return null;
     }
 
     private boolean checkData(){
