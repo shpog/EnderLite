@@ -8,6 +8,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 public class UserData {
+    private StringProperty login = new SimpleStringProperty();
+    private StringProperty email = new SimpleStringProperty();
+    private ListProperty<String> friendsList;
+    private ListProperty<ChatData> chatsList;
 
     UserData(){
         this.login.set("");
@@ -19,12 +23,6 @@ public class UserData {
         this.email.set(email);
     }
 
-    private StringProperty login = new SimpleStringProperty();
-    private StringProperty email = new SimpleStringProperty();
-    private StringProperty passw = new SimpleStringProperty();
-    private ListProperty<String> friendsList;
-    private ListProperty<ChatData> chatsList;
-
     {
         ObservableList<String> observListFriends = FXCollections.observableArrayList();
         friendsList = new SimpleListProperty<String>(observListFriends);
@@ -32,18 +30,6 @@ public class UserData {
         chatsList = new SimpleListProperty<ChatData>(observListChats);
     }
 
-    //passw
-    public StringProperty getPasswProperty(){
-        return passw;
-    }
-
-    public void setPassw(String newPassw){
-        passw.set(newPassw);
-    }
-
-    public String getPassw(){
-        return passw.get();
-    }
     
     //login
     public StringProperty getLoginProperty(){

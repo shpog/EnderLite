@@ -13,5 +13,7 @@ public enum ResponseType {
     CHAT_DESTROY,
     CHAT_NAME_CHANGE,
     CMD_CHAT_NAME_CHANGE,
+    ANS_MESSAGE,
+    CMD_MESSAGE,
     DISCONNECT
 }
