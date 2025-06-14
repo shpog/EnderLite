@@ -1,32 +1,59 @@
 package com.EnderLite.Utils;
 
-import java.io.*;
-import java.net.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 
 public class ClientHandler implements Runnable {
     private final Socket clientSocket;
 
+    private DataOutputStream out;
+    private DataInputStream in;
+
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
+
+    }
+
+    public byte[] readBytes() {
+        byte[] buffer = null;
+        try {
+            long bytes = in.readLong();
+            buffer = in.readNBytes((int) bytes);
+        } catch (IOException e) {
+            System.err.println("Error while receiving data!");
+        }
+        return buffer;
+    }
+
+    public void sendBytes(byte[] buffer) {
+        try {
+            socOut.writeLong(buffer.length);
+            socOut.write(buffer);
+        } catch (IOException e) {
+            System.err.println("Error while transmitting data!");
+        }
     }
 
     public void run() {
-        PrintWriter out = null;
-        BufferedReader in = null;
+        // PrintWriter out = null;
+        // BufferedReader in = null;
         try {
 
-            out = new PrintWriter(
-                    clientSocket.getOutputStream(), true);
+            out = new DataOutputStream(clientSocket.getOutputStream());
+            in = new DataInputStream(clientSocket.getInputStream());
 
-            long numBytes = (new DataInputStream(clientSocket.getInputStream()).readLong());
-
-            in = new BufferedReader(
-                    new InputStreamReader(clientSocket.getInputStream()));
+            // in = new BufferedReader(
+            // new InputStreamReader(clientSocket.getInputStream()));
 
             String line;
-            while ((line = DataDehasher.Caesar(in.readLine(), numBytes)) != null) {
+            while ((line = new String(readBytes())) != null) {
+                if (line.startsWith("EnderLite_Client_")) {
 
-                // here command analysis
+                }
+
+                // // here command analysis
                 // System.out.printf(
                 // " Sent from the client: %s\n",
                 // line);
