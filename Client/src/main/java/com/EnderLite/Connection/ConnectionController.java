@@ -23,7 +23,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.util.encoders.Base64;
 
 import com.EnderLite.Logger.Logger;
 
@@ -33,7 +32,7 @@ public final class  ConnectionController {
     private Socket socket;
     private DataInputStream inStream;
     private DataOutputStream outStream;
-    private volatile SecretKey secretKey;
+    private SecretKey secretKey;
 
     public ConnectionController(String host, int port){
         this.configureConnection(host, port);
@@ -68,6 +67,13 @@ public final class  ConnectionController {
         handshake();
 
         return true;
+    }
+
+    public SecretKey getAESKey(){
+        byte[] keyBytes = secretKey.getEncoded();
+        String algorithm = secretKey.getAlgorithm();
+
+        return new SecretKeySpec(keyBytes, algorithm);
     }
 
     public void closeStreams() throws IOException{
@@ -193,5 +199,6 @@ public final class  ConnectionController {
         }
         return true;
     }
+
 
 }
