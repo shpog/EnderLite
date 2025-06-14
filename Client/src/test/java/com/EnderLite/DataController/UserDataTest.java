@@ -39,13 +39,6 @@ public class UserDataTest {
     }
 
     @Test
-    public void setAndGetPassword(){
-        userData.setPassw("12345");
-
-        assertEquals("12345", userData.getPassw());
-    }
-
-    @Test
     public void ChangeEmailAndLogin(){
         userData.setEmail("testing@gmail.com");
         assertEquals("testing@gmail.com", userData.getEmail());

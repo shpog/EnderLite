@@ -54,13 +54,13 @@ public class DataController {
         
     }
 
-    public boolean establishConnection(String host, int port){
-        if (host != null){
-            ConnectionController.configureConnection(host, port);
-        }
+    // public boolean establishConnection(String host, int port){
+    //     if (host != null){
+    //         ConnectionController.configureConnection(host, port);
+    //     }
 
-        return ConnectionController.establishConnection();
-    }
+    //     return ConnectionController.establishConnection();
+    // }
 
     public void setChatActive(ChatData chatId){
         activeChat = chatId;
