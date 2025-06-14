@@ -8,8 +8,16 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+// import javax.json.Json;
+// import javax.json.JsonArray;
+// import javax.json.JsonObject;
+// import javax.json.JsonReader;
+// import javax.json.JsonValue;
+
 import org.json.JSONObject;
-import com.owlike.genson.Genson;
+import org.json.JSONTokener;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 public class Model {
     public Model() {
@@ -20,12 +28,19 @@ public class Model {
         // File userFile = new File("./");
         InputStream in = getClass().getResourceAsStream("/Users/" + uuid.toString() + ".json");
 
-        String json = new BufferedReader(
-                new InputStreamReader(in, StandardCharsets.UTF_8))
-                .lines()
-                .collect(Collectors.joining("\n"));
+        // String json = new BufferedReader(
+        // new InputStreamReader(in, StandardCharsets.UTF_8))
+        // .lines()
+        // .collect(Collectors.joining("\n"));
 
-        Map<String, Object> map = (new Genson()).deserialize(json, Map.class);
+        // JsonReader jsonReader = Json.createReader(in);
+        JSONTokener tokener = new JSONTokener(in);
+        JSONObject jsonObject = new JSONObject(tokener);// jsonReader.readObject();
+        // jsonReader.close();
+
+        // emp.setId(jsonObject.getInt("id"));
+
+        // Map<String, Object> map = (new Genson()).deserialize(json, Map.class);
 
         // Object map2 = genson.deserialize(json, Object.class);
 
@@ -34,9 +49,9 @@ public class Model {
         // data.getString("passwordHash"));
         User user = new User();
         user.ID = uuid;
-        user.Login = map.get("login").toString();
-        user.Email = map.get("email").toString();
-        user.PasswordHash = map.get("passwordHash").toString();
+        user.Login = jsonObject.getString("login");
+        user.Email = jsonObject.getString("email");
+        user.PasswordHash = jsonObject.getString("passwordHash");
 
         return user;
     }

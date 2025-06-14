@@ -64,17 +64,12 @@
         <artifactId>bcprov-jdk18on</artifactId>
         <version>1.78.1</version>
     </dependency> 
-    <!-- https://mvnrepository.com/artifact/org.json/json -->
+
+
     <dependency>
         <groupId>org.json</groupId>
         <artifactId>json</artifactId>
-        <version>20250517</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.owlike</groupId>
-      <artifactId>genson</artifactId>
-      <version>1.6</version>
+        <version>20240303</version>  <!-- Use the latest version if available -->
     </dependency>
 
 
