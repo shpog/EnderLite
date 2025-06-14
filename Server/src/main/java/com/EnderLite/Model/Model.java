@@ -1,13 +1,12 @@
 package com.EnderLite.Model;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Date;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -34,23 +33,31 @@ public class Model {
         return user;
     }
 
-    // public User createUser(UUID uuid) {
-    // InputStream in = getClass().getResourceAsStream("/Users/" + uuid.toString() +
-    // ".json");
+    public User getUser(String uuid) {
+        return getUser(UUID.fromString(uuid));
+    }
 
-    // JSONTokener tokener = new JSONTokener(in);
-    // JSONObject jsonObject = new JSONObject(tokener);
+    public User modifyOrCreateUser(User user) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("login", user.Login);
+        jsonObject.put("email", user.Email);
+        jsonObject.put("passwordHash", user.PasswordHash);
 
-    // User user = new User();
-    // user.ID = uuid;
-    // user.Login = jsonObject.getString("login");
-    // user.Email = jsonObject.getString("email");
-    // user.PasswordHash = jsonObject.getString("passwordHash");
+        // try {
+        // PrintWriter writer = new PrintWriter(
+        // new File(this.getClass().getResource("/Users/" + user.ID.toString() +
+        // ".json").getPath()));
 
-    // return user;
-    // }
+        // writer.print(jsonObject.toString());
+        // } catch (FileNotFoundException e) {
+        // System.out.println("An error occurred.");
+        // e.printStackTrace();
+        // }
 
-    public MessageEntry getMessageEntry(UUID chatUUID, long messageID) {
+        return user;
+    }
+
+    public MessageEntry getMessageEntry(UUID uuid, long messageID) {
         InputStream in = getClass()
                 .getResourceAsStream("/Chats/" + uuid.toString() + "/History/" + String.valueOf(messageID) + ".json");
 
@@ -65,7 +72,11 @@ public class Model {
         return message;
     }
 
-    public Chat getChat() {
+    public MessageEntry getMessageEntry(String uuid, long messageID) {
+        return getMessageEntry(UUID.fromString(uuid), messageID);
+    }
+
+    public Chat getChat(UUID uuid) {
         InputStream in = getClass().getResourceAsStream("/Chats/" + uuid.toString() + "/" + uuid.toString() + ".json");
 
         JSONTokener tokener = new JSONTokener(in);
@@ -76,12 +87,16 @@ public class Model {
         chat.Name = jsonObject.getString("name");
         chat.Members = new ArrayList<User>();
 
-        JSONArray members = obj.getJSONArray("members");
+        JSONArray members = jsonObject.getJSONArray("members");
         for (int i = 0; i < members.length(); i++) {
             chat.Members.add(getUser(members.getString(i)));
         }
 
         return chat;
+    }
+
+    public Chat getChat(String uuid) {
+        return getChat(UUID.fromString(uuid));
     }
 
 }
