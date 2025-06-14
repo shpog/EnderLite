@@ -24,6 +24,8 @@ public class ClientHandler implements Runnable {
 
             String line;
             while ((line = in.readLine()) != null) {
+
+                // here command analysis
                 System.out.printf(
                         " Sent from the client: %s\n",
                         line);
