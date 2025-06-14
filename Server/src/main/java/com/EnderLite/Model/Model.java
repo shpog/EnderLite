@@ -25,28 +25,11 @@ public class Model {
     }
 
     public User getUser(UUID uuid) {
-        // File userFile = new File("./");
         InputStream in = getClass().getResourceAsStream("/Users/" + uuid.toString() + ".json");
 
-        // String json = new BufferedReader(
-        // new InputStreamReader(in, StandardCharsets.UTF_8))
-        // .lines()
-        // .collect(Collectors.joining("\n"));
-
-        // JsonReader jsonReader = Json.createReader(in);
         JSONTokener tokener = new JSONTokener(in);
-        JSONObject jsonObject = new JSONObject(tokener);// jsonReader.readObject();
-        // jsonReader.close();
+        JSONObject jsonObject = new JSONObject(tokener);
 
-        // emp.setId(jsonObject.getInt("id"));
-
-        // Map<String, Object> map = (new Genson()).deserialize(json, Map.class);
-
-        // Object map2 = genson.deserialize(json, Object.class);
-
-        // JSONObject data = new JSONObject(JSONData);
-        // User user = new User(uuid, data.getString("login"), data.getString("email"),
-        // data.getString("passwordHash"));
         User user = new User();
         user.ID = uuid;
         user.Login = jsonObject.getString("login");
