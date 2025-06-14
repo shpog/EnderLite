@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
+import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import java.util.Date;
 
@@ -13,16 +14,17 @@ import org.json.JSONTokener;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.util.prefs.BackingStoreException;
+
 public class Model {
     public Model() {
 
     }
 
     public User getUser(UUID uuid) {
-        InputStream in = getClass().getResourceAsStream("/Users/" + uuid.toString() + ".json");
-
-        JSONTokener tokener = new JSONTokener(in);
-        JSONObject jsonObject = new JSONObject(tokener);
+        Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
+        JSONObject jsonObject = new JSONObject(
+                prefs.get(uuid.toString(), "{\"login\":\"none\",\"email\":\"none\",\"passwordHash\":\"none\"}"));
 
         User user = new User();
         user.ID = uuid;
@@ -43,29 +45,24 @@ public class Model {
         jsonObject.put("email", user.Email);
         jsonObject.put("passwordHash", user.PasswordHash);
 
-        // try {
-        // PrintWriter writer = new PrintWriter(
-        // new File(this.getClass().getResource("/Users/" + user.ID.toString() +
-        // ".json").getPath()));
-
-        // writer.print(jsonObject.toString());
-        // } catch (FileNotFoundException e) {
-        // System.out.println("An error occurred.");
-        // e.printStackTrace();
-        // }
-
+        Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
+        prefs.put(user.ID.toString(), jsonObject.toString());
+        try {
+            prefs.sync();
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
         return user;
     }
 
     public MessageEntry getMessageEntry(UUID uuid, long messageID) {
-        InputStream in = getClass()
-                .getResourceAsStream("/Chats/" + uuid.toString() + "/History/" + String.valueOf(messageID) + ".json");
-
-        JSONTokener tokener = new JSONTokener(in);
-        JSONObject jsonObject = new JSONObject(tokener);
+        Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats").node(uuid.toString())
+                .node("History");
+        JSONObject jsonObject = new JSONObject(prefs.get(String.valueOf(messageID),
+                "{\"sender\":\"none\",\"date\":\"0\",\"content\":\"\"}"));
 
         MessageEntry message = new MessageEntry();
-        message.Sender = getUser(jsonObject.getString("sender"));
+        message.Sender = getUser(jsonObject.get("sender").toString());
         message.Date = new Date(messageID);
         message.Content = jsonObject.getString("content");
 
@@ -76,11 +73,26 @@ public class Model {
         return getMessageEntry(UUID.fromString(uuid), messageID);
     }
 
-    public Chat getChat(UUID uuid) {
-        InputStream in = getClass().getResourceAsStream("/Chats/" + uuid.toString() + "/" + uuid.toString() + ".json");
+    public MessageEntry createMessageEntry(UUID uuid, MessageEntry message) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("sender", message.Sender);
+        jsonObject.put("date", message.Date.getTime());
+        jsonObject.put("content", message.Content);
 
-        JSONTokener tokener = new JSONTokener(in);
-        JSONObject jsonObject = new JSONObject(tokener);
+        Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats").node(uuid.toString())
+                .node("History");
+        prefs.put(String.valueOf(message.Date.getTime()), jsonObject.toString());
+        try {
+            prefs.sync();
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
+        return message;
+    }
+
+    public Chat getChat(UUID uuid) {
+        Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
+        JSONObject jsonObject = new JSONObject(prefs.get(uuid.toString(), "{\"name\": \"none\",\"members\": []}"));
 
         Chat chat = new Chat();
         chat.ID = uuid;
@@ -97,6 +109,22 @@ public class Model {
 
     public Chat getChat(String uuid) {
         return getChat(UUID.fromString(uuid));
+    }
+
+    public Chat modifyOrCreateChat(Chat chat) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("name", chat.Name);
+        // jsonObject.put("email", user.Email);
+        // jsonObject.put("passwordHash", user.PasswordHash);
+
+        Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
+        prefs.put(chat.ID.toString(), jsonObject.toString());
+        try {
+            prefs.sync();
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
+        return chat;
     }
 
 }

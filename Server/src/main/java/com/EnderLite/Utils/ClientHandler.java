@@ -18,18 +18,19 @@ public class ClientHandler implements Runnable {
             out = new PrintWriter(
                     clientSocket.getOutputStream(), true);
 
+            long numBytes = (new DataInputStream(clientSocket.getInputStream()).readLong());
+
             in = new BufferedReader(
-                    new InputStreamReader(
-                            clientSocket.getInputStream()));
+                    new InputStreamReader(clientSocket.getInputStream()));
 
             String line;
-            while ((line = in.readLine()) != null) {
+            while ((line = DataDehasher.Caesar(in.readLine(), numBytes)) != null) {
 
                 // here command analysis
-                System.out.printf(
-                        " Sent from the client: %s\n",
-                        line);
-                out.println(line);
+                // System.out.printf(
+                // " Sent from the client: %s\n",
+                // line);
+                // out.println(line);
             }
         } catch (IOException e) {
             e.printStackTrace();
