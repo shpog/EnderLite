@@ -51,7 +51,7 @@ public class ClientHandler implements Runnable {
             while (true) {
                 byte[] receivedBytes = readBytes();
                 if (receivedBytes == null || receivedBytes.length == 0) {
-                    System.out.println("Client " + clientSocket.getInetAddress() + " disconnected.");
+                    System.out.println("Client " + clientSocket.getInetAddress() + " disconnected");
                     break;
                 }
                 line = new String(receivedBytes);
@@ -244,7 +244,7 @@ public class ClientHandler implements Runnable {
                 else if (line.equals("REQ_CONN_END")) {
                     response = "ANS_CONN_END";
                     sendBytes(response.getBytes()); // Send response before breaking
-                    System.out.println("Client " + clientSocket.getInetAddress() + " requested disconnect.");
+                    System.out.println("Client " + clientSocket.getInetAddress() + " requested disconnect");
                     break;
                 }
 

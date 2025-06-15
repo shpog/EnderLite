@@ -1,5 +1,7 @@
 package com.EnderLite.Controller;
 
+import com.EnderLite.Model.*;
+
 public class Controller {
     public Controller() {
 
