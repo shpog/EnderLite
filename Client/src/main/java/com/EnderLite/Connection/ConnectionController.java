@@ -147,13 +147,13 @@ public final class  ConnectionController {
                 buffer = cipher.doFinal(buffer);
                 Logger.getLogger().logInfo("Message decrypted");
             } catch (InvalidKeyException e){
-
+                Logger.getLogger().logError("InvalidKeyException cipher (ConnectionController)");
             } catch (NoSuchPaddingException e){
-
+                Logger.getLogger().logError("NoSuchPaddingException cipher (ConnectionController)");
             } catch (IllegalBlockSizeException e) {
-
+                Logger.getLogger().logError("IllegalBlockSizeException cipher (ConnectionController)");
             } catch (BadPaddingException e) {
-
+                Logger.getLogger().logError("BadPaddingException cipher (ConnectionController)");
             }
 
             String secondStageMessage = new String(buffer);
@@ -164,7 +164,7 @@ public final class  ConnectionController {
                 return false;
                 }
             } catch (IOException e){
-
+                Logger.getLogger().logError("Error while reveiving second stage handshake message (establish connection)");
             }
             //get AES key
             Logger.getLogger().logInfo("Getting AES key");
@@ -178,8 +178,14 @@ public final class  ConnectionController {
                 Cipher cipher = Cipher.getInstance("AES", "BC");
                 cipher.init(Cipher.ENCRYPT_MODE, secretKey);
                 buffer = cipher.doFinal(thirdStageMessage.getBytes());
-            } catch (Exception e){
-
+            } catch (InvalidKeyException e){
+                Logger.getLogger().logError("InvalidKeyException cipher (ConnectionController)");
+            } catch (NoSuchPaddingException e){
+                Logger.getLogger().logError("NoSuchPaddingException cipher (ConnectionController)");
+            } catch (IllegalBlockSizeException e) {
+                Logger.getLogger().logError("IllegalBlockSizeException cipher (ConnectionController)");
+            } catch (BadPaddingException e) {
+                Logger.getLogger().logError("BadPaddingException cipher (ConnectionController)");
             }
 
             try{
