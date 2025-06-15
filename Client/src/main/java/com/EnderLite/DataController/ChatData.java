@@ -1,10 +1,12 @@
 package com.EnderLite.DataController;
 
+import java.util.Objects;
+
 public class ChatData{
     private String chatId;
     private Rank rank;
 
-    ChatData(String chatId, Rank rank){
+    public ChatData(String chatId, Rank rank){
         this.chatId = chatId;
         this.rank = rank;
     }
@@ -42,5 +44,10 @@ public class ChatData{
 
         ChatData other = (ChatData)ob;
         return other.getId().equals( this.chatId );
+    }
+
+    @Override
+    public int hashCode(){
+        return Objects.hash(chatId, rank);
     }
 }

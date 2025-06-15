@@ -1,6 +1,7 @@
 package com.EnderLite.DataController;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -21,6 +22,7 @@ public class DataController {
     private volatile UserData userData;
     private static volatile DataController instance;
     private volatile ChatData activeChat;
+    private volatile ConnectionController connectionController;
     //viewCOntrollers references
     private MainViewController mainViewController;
     //queues
@@ -44,6 +46,7 @@ public class DataController {
         synchronized(DataController.class){
             if (instance == null){
                 instance = new DataController();
+                instance.activeChat = null;
             }
             return instance;
         }
@@ -54,16 +57,19 @@ public class DataController {
         
     }
 
-    // public boolean establishConnection(String host, int port){
-    //     if (host != null){
-    //         ConnectionController.configureConnection(host, port);
-    //     }
+    public boolean establishConnection(String host, int port){
+        connectionController = new ConnectionController(host, port);
+        boolean connection = connectionController.establishConnection();
+        /*
+         * TODO: Create thread after establishing Connection and taskScheduler
+         */
 
-    //     return ConnectionController.establishConnection();
-    // }
+        return connection;
+    }
 
     public void setChatActive(ChatData chatId){
         activeChat = chatId;
+        mainViewController.clearChat();
     }
 
     public ChatData getActiveChat(){
@@ -98,7 +104,7 @@ public class DataController {
             Logger.getLogger().logError("Interrupt while adding request!");
         }
 
-        Message dataContainer = new Message(getUserLogin(), null, null, null, null, null);
+        Message dataContainer = new Message(null, null, null, null, null, null);
         pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.AUTH_STATUS, dataContainer));
     }
 
@@ -137,11 +143,34 @@ public class DataController {
         try{
             dataOutQueue.put(mesg);
         } catch (InterruptedException e){
-            Logger.getLogger().logError("Interrupt while adding request!");
+            Logger.getLogger().logError("Interrupt while adding friend request!");
         }
 
         Message dataContainer = new Message(getUserLogin(), email, login, null, null, null);
         pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+    }
+
+    public void reqInvAnswer(String login, boolean accepted){
+        String mesg;
+        String status = accepted ? "-ACCEPT" : "-DENIED";
+        mesg = "REQ_INV_STATUS-" + login + "-" + userData.getLogin() + status;
+        try{
+            dataOutQueue.put(mesg);
+        } catch (InterruptedException e){
+            Logger.getLogger().logError("Interrupt while responding to add friend request!");
+        }
+    }
+
+    public void reqRemoveUser(String login){
+        String mesg;
+        mesg = "REQ_DEL_LOG-" + login + "-" + userData.getLogin();
+        try{
+            dataOutQueue.put(mesg);
+        } catch (InterruptedException e){
+            Logger.getLogger().logError("Interrupt while removind friend request!");
+        }
+        Message dataContainer = new Message(getUserLogin(), null, login, null, null, null);
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.DEL_ANS, dataContainer));
     }
 
     public void reqCreateChat(String chatId) {
@@ -157,10 +186,11 @@ public class DataController {
     }
 
     public void reqAddUserToChat(String chatId, List<String> userlogins) {
-        StringBuilder mesg = new StringBuilder("REQ_ADD_CHAT-" + chatId + "-" + userData.getLogin());
+        StringBuilder mesg = new StringBuilder("REQ_ADD_CHAT-" + chatId + "-" + userData.getLogin() + "-L=");
         for ( String user : userlogins){
-            mesg.append("-" + user);
+            mesg.append(user + ",");
         }
+        mesg.delete(mesg.length() - 1, mesg.length()); // delete last ','
         try{
             dataOutQueue.put(mesg.toString());
         } catch (InterruptedException e){
@@ -183,23 +213,26 @@ public class DataController {
         pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
     }
 
-    public void reqChangeChatRank(String chatId, String login) {
-        String mesg = "REQ_CHAN_CHAT_RANK-" + chatId + "-" + userData.getLogin() + "-" + login;
+    public void reqChangeChatRank(String chatId, String login, boolean admin) {
+        String mesg = "REQ_CHAN_CHAT_RANK-" + chatId + "-" + userData.getLogin() + "-" + login
+            + "-" + (admin ? "ADMIN" : "USER");
         try{
             dataOutQueue.put(mesg);
         } catch (InterruptedException e){
             Logger.getLogger().logError("Interrupt while adding request!");
         }
-
-        Message dataContainer = new Message(getUserLogin(), chatId, login, null, null, null);
+        List<String> ranga = new ArrayList<>();
+        ranga.add( admin ? "A" : "U");
+        Message dataContainer = new Message(getUserLogin(), chatId, login, ranga, null, null);
         pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
     }
 
     public void reqRemoveUserFromChat(String chatId, List<String> userlogins){
-        StringBuilder mesg = new StringBuilder( "REQ_DEL_CHAT-" + chatId + "-" + userData.getLogin() );
+        StringBuilder mesg = new StringBuilder( "REQ_DEL_CHAT-" + chatId + "-" + userData.getLogin() + "-L=");
         for (String user : userlogins) {
-            mesg.append("-" + user);
+            mesg.append(user + ",");
         }
+        mesg.delete(mesg.length() - 1, mesg.length());
         try{
             dataOutQueue.put(mesg.toString());
         } catch (InterruptedException e){
@@ -222,15 +255,15 @@ public class DataController {
         pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
     }
 
-    public void reqSendMessage(String chatId, String text){
-        String mesg = "SEND_DATA-" + userData.getLogin() + "-" + chatId + "-" + text;
+    public void reqSendMessage(String text){
+        String mesg = "SEND_DATA-" + userData.getLogin() + "-" + activeChat.getId() + "-" + text;
         try{
             dataOutQueue.put(mesg);
         } catch (InterruptedException e){
             Logger.getLogger().logError("Interrupt while adding request!");
         }
 
-        Message dataContainer = new Message(getUserLogin(), chatId, text, null, null, null);
+        Message dataContainer = new Message(getUserLogin(), activeChat.getId(), text, null, null, null);
         pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
     }
 
@@ -272,8 +305,8 @@ public class DataController {
         return getAuthStatus();
     }
 
-    public void addMessageToView(String message, String login, LocalTime time){
-        mainViewController.addMessage(message, login, time);
+    public void addMessageToView(String message, String login, LocalTime time, boolean user){
+        mainViewController.addMessage(message, login, time, user);
     }
 
     //Used to retrive data or update userData
