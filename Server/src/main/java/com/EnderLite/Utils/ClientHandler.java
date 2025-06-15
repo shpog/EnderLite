@@ -9,13 +9,15 @@ import java.net.Socket;
 import java.net.Authenticator.RequestorType;
 
 public class ClientHandler implements Runnable {
+    private Controller ctrl;
     private final Socket clientSocket;
 
     private DataOutputStream out;
     private DataInputStream in;
 
     public ClientHandler(Socket socket) {
-        this.clientSocket = socket;
+        clientSocket = socket;
+        ctrl = new Controller();
 
     }
 
@@ -62,7 +64,7 @@ public class ClientHandler implements Runnable {
                     if (parts.length == 3) {
                         String login = parts[1];
                         String password = parts[2];
-                        response = AUTH_LOG(login, password);
+                        response = ctrl.AUTH_LOG(login, password);
                     }
                 }
 
@@ -71,12 +73,12 @@ public class ClientHandler implements Runnable {
                     if (parts.length == 3) {
                         String email = parts[1];
                         String password = parts[2];
-                        response = AUTH_EMAIL(email, password);
+                        response = ctrl.AUTH_EMAIL(email, password);
                     }
                 }
 
                 else if (line.equals("AUTH_STATUS")) {
-                    response = AUTH_STATUS();
+                    response = ctrl.AUTH_STATUS();
                 }
 
                 else if (line.startsWith("REQ_ADD_USER-")) {
@@ -85,7 +87,7 @@ public class ClientHandler implements Runnable {
                         String login = parts[1];
                         String email = parts[2];
                         String password = parts[3];
-                        response = REQ_ADD_USER(login, email, password);
+                        response = ctrl.REQ_ADD_USER(login, email, password);
                     }
                 }
 
@@ -93,7 +95,7 @@ public class ClientHandler implements Runnable {
                     String[] parts = line.split("-");
                     if (parts.length == 2) {
                         String requestedLogin = parts[1];
-                        response = REQ_USER_DATA_LOGIN(requestedLogin);
+                        response = ctrl.REQ_USER_DATA_LOGIN(requestedLogin);
                     }
                 }
 
@@ -101,7 +103,7 @@ public class ClientHandler implements Runnable {
                     String[] parts = line.split("-");
                     if (parts.length == 2) {
                         String requestedEmail = parts[1];
-                        response = REQ_USER_DATA_EMAIL(requestedEmail);
+                        response = ctrl.REQ_USER_DATA_EMAIL(requestedEmail);
                     }
                 }
 
@@ -109,7 +111,7 @@ public class ClientHandler implements Runnable {
                 // String[] parts = line.split("-");
                 // if (parts.length == 2) {
                 // String phrase = parts[1];
-                // response = REQ_USERS_LOG(phrase);
+                // response = ctrl.REQ_USERS_LOG(phrase);
                 // }
                 // }
 
@@ -119,7 +121,7 @@ public class ClientHandler implements Runnable {
                         String userToInvite = parts[1];
                         String invitingUser = parts[2];
 
-                        REQ_INV_LOG(userToInvite, invitingUser);
+                        ctrl.REQ_INV_LOG(userToInvite, invitingUser);
                     }
                 }
 
@@ -129,7 +131,7 @@ public class ClientHandler implements Runnable {
                         String emailToInvite = parts[1];
                         String invitingUser = parts[2];
 
-                        REQ_INV_LOG(emailToInvite, invitingUser);
+                        ctrl.REQ_INV_LOG(emailToInvite, invitingUser);
                     }
                 }
 
@@ -139,7 +141,7 @@ public class ClientHandler implements Runnable {
                         String invitingUser = parts[1];
                         String invitedUser = parts[2];
                         String status = parts[3]; // ACCEPTED or DENIED
-                        response = REQ_INV_STATUS(invitingUser, invitedUser, status);
+                        response = ctrl.REQ_INV_STATUS(invitingUser, invitedUser, status);
                     }
                 }
 
@@ -148,7 +150,7 @@ public class ClientHandler implements Runnable {
                     if (parts.length == 3) {
                         String login = parts[1];
                         String chatName = parts[2];
-                        response = REQ_CRT_CHAT(login, chatName);
+                        response = ctrl.REQ_CRT_CHAT(login, chatName);
                     }
                 }
 
@@ -160,7 +162,7 @@ public class ClientHandler implements Runnable {
                         String sendingLogin = parts[2];
                         String usersToAddString = parts[3].substring(3, parts[3].length() - 1);
                         String[] usersToAdd = usersToAddString.split(",");
-                        response = REQ_ADD_CHAT(chatName, sendingLogin, usersToAdd);
+                        response = ctrl.REQ_ADD_CHAT(chatName, sendingLogin, usersToAdd);
                     }
                 }
 
@@ -170,7 +172,7 @@ public class ClientHandler implements Runnable {
                         String login = parts[1];
                         String oldChatName = parts[2];
                         String newChatName = parts[3];
-                        response = REQ_CHAN_CHAT_NAME(login, oldChatName, newChatName);
+                        response = ctrl.REQ_CHAN_CHAT_NAME(login, oldChatName, newChatName);
                     }
                 }
 
@@ -181,7 +183,7 @@ public class ClientHandler implements Runnable {
                         String requestingLogin = parts[2];
                         String changedLogin = parts[3];
                         String rank = parts[4]; // USER or ADMIN
-                        response = REQ_CHAN_CHAT_RANK(chatName, requestingLogin, changedLogin, rank);
+                        response = ctrl.REQ_CHAN_CHAT_RANK(chatName, requestingLogin, changedLogin, rank);
                     }
                 }
 
@@ -193,7 +195,7 @@ public class ClientHandler implements Runnable {
                         String sendingLogin = parts[2];
                         String usersToRemoveString = parts[3].substring(3, parts[3].length() - 1);
                         String[] usersToRemove = usersToRemoveString.split(",");
-                        response = REQ_DEL_CHAT(chatName, sendingLogin, usersToRemove);
+                        response = ctrl.REQ_DEL_CHAT(chatName, sendingLogin, usersToRemove);
                     }
                 }
 
@@ -202,7 +204,7 @@ public class ClientHandler implements Runnable {
                     if (parts.length == 3) {
                         String login = parts[1];
                         String chatName = parts[2];
-                        response = REQ_DES_CHAT(login, chatName);
+                        response = ctrl.REQ_DES_CHAT(login, chatName);
                     }
                 }
 
@@ -212,7 +214,7 @@ public class ClientHandler implements Runnable {
                         String login = parts[1];
                         String chatName = parts[2];
                         String data = line.substring(line.indexOf(chatName) + chatName.length() + 1);
-                        response = SEND_DATA(login, chatName, data);
+                        response = ctrl.SEND_DATA(login, chatName, data);
                     }
                 }
 
@@ -226,7 +228,7 @@ public class ClientHandler implements Runnable {
                 // String commandType = chatNameSuffix.substring(chatNameSuffix.lastIndexOf("_")
                 // + 1);
 
-                // response = GET_DATA(login, chatName, commandType);
+                // response = ctrl.GET_DATA(login, chatName, commandType);
                 // }
                 // }
 
@@ -237,7 +239,7 @@ public class ClientHandler implements Runnable {
                 // String chatName = parts[2];
                 // String fileData = line.substring(line.indexOf(chatName) + chatName.length() +
                 // 1);
-                // response = SEND_FILE(login, chatName, fileData);
+                // response = ctrl.SEND_FILE(login, chatName, fileData);
                 // }
                 // }
 

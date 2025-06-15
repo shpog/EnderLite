@@ -65,6 +65,8 @@ public class Controller {
                     + "-E=some@email.com-F={friend1,friend2}-C={chatA-USER,chatB-ADMIN}-END";
             return "ANS_USER_DATA-" + userData;
         }
+
+        return "";
     }
 
     public String REQ_USER_DATA_EMAIL(String requestedEmail) {
@@ -80,6 +82,8 @@ public class Controller {
                     + "-F={friendA,friendB}-C={chatX-USER,chatY-ADMIN}-END";
             return "ANS_USER_DATA-" + userData;
         }
+
+        return "";
     }
 
     /*
@@ -127,6 +131,24 @@ public class Controller {
         // CMD_INV_LOG-(login_zapraszającego)
     }
 
+    /* DODAć to */
+    public void REQ_DEL_LOG(String userToInvite, String invitingUser) {
+        // TODO: Implement logic to send CMD_INV_LOG to userToInvite
+        // This requires knowledge of other connected clients.
+        // response = "Server processed invitation request for " + userToInvite + " from
+        // " + invitingUser; // Client receives no direct ACK here
+        // CMD_INV_LOG-(login_zapraszającego)
+    }
+
+    /* DODAć to */
+    public void CMD_DEL_LOG(String userToInvite, String invitingUser) {
+        // TODO: Implement logic to send CMD_INV_LOG to userToInvite
+        // This requires knowledge of other connected clients.
+        // response = "Server processed invitation request for " + userToInvite + " from
+        // " + invitingUser; // Client receives no direct ACK here
+        // CMD_INV_LOG-(login_zapraszającego)
+    }
+
     public String REQ_INV_STATUS(String invitingUser, String invitedUser, String status) {
         // TODO: Update friend status in database
         if ("ACCEPTED".equals(status)) {
@@ -135,6 +157,8 @@ public class Controller {
         } else if ("DENIED".equals(status)) {
             return "ANS_INV_LOG-DENIED-" + invitedUser;
         }
+
+        return "ANS_INV_LOG-DENIED-" + invitedUser;
     }
 
     public String REQ_CRT_CHAT(String login, String chatname) {
