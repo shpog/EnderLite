@@ -3,8 +3,12 @@ package com.EnderLite.Connection;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.EnderLite.Logger.Logger;
 
 public class ConnectionControllerTest {
     private ConnectionController controller;
@@ -21,8 +25,18 @@ public class ConnectionControllerTest {
         serverThread.setOnlyHandshake();
         serverThread.start();
 
-        controller.establishConnection();
+        assertTrue(controller.establishConnection());
         serverThread.interrupt();
+        try{
+            serverThread.join();
+        } catch (InterruptedException e){
+            Logger.getLogger().logError("Error while waiting for threads (Test)");
+        }
+        try{
+            controller.closeStreams();
+        } catch (IOException e){
+            Logger.getLogger().logError("Erro while closing sockets Test");
+        }
         System.out.println(serverThread.handshakeFirstMessage);
         System.out.println("2 message: " + serverThread.handshakeSecondMessage);
         System.out.println("3 message: " + serverThread.handshakeThirdMessage);
