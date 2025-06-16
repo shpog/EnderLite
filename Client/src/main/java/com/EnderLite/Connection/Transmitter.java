@@ -53,7 +53,7 @@ public class Transmitter extends Thread {
             try{
                 toTransfer = dataQueue.take();
             } catch (InterruptedException e) {
-                Logger.getLogger().logInfo("Transmitter interrupted. Exiting");
+                Logger.getLogger().logInfo("Transmitter interrupted. Exiting(Transmitter)");
                 break;
             }
 

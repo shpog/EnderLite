@@ -24,7 +24,9 @@ import com.EnderLite.DataController.ApiMessages.Message;
 import com.EnderLite.DataController.ApiMessages.ResponseType;
 import com.EnderLite.DataController.ApiMessages.DisassemblyClasses.AuthDisassembler;
 import com.EnderLite.DataController.ApiMessages.DisassemblyClasses.CmdChangeChatDisassembler;
+import com.EnderLite.DataController.ApiMessages.DisassemblyClasses.CmdDestroyChat;
 import com.EnderLite.DataController.ApiMessages.DisassemblyClasses.CmdMessageDisassembler;
+import com.EnderLite.DataController.ApiMessages.DisassemblyClasses.CreateUserDisassembler;
 import com.EnderLite.DataController.ApiMessages.DisassemblyClasses.InviteDisassembler;
 import com.EnderLite.DataController.ApiMessages.DisassemblyClasses.MessageDisassembler;
 import com.EnderLite.DataController.ApiMessages.DisassemblyClasses.StatusDisassembler;
@@ -39,11 +41,12 @@ public class Receiver extends Thread{
     private Cipher cipher;
     private DataInputStream inStream;
     private final Map<String, Pair<ResponseType, DisassemblerInterFace> > responseMap = new HashMap<String, Pair<ResponseType, DisassemblerInterFace> >();
+    private boolean shutdown;
 
     {
         Security.addProvider(new BouncyCastleProvider());
         responseMap.put("AUTH_RESP-", new Pair<>(ResponseType.AUTH_STATUS, new AuthDisassembler()) );
-        responseMap.put("ANS_ADD_USER-", new Pair<>(ResponseType.CREATE_USER, new AuthDisassembler()) );
+        responseMap.put("ANS_ADD_USER-", new Pair<>(ResponseType.CREATE_USER, new CreateUserDisassembler()) );
         responseMap.put("ANS_USER_DATA-", new Pair<>(ResponseType.USER_DATA, new UserDataDisassembler()) );
         responseMap.put("CMD_INV_LOG-", new Pair<>(ResponseType.INV_CMD, new InviteDisassembler()) );
         responseMap.put("ANS_INV_LOG-", new Pair<>(ResponseType.INV_ANS, new InviteDisassembler()) );
@@ -56,7 +59,7 @@ public class Receiver extends Thread{
         responseMap.put("ANS_CHAN_CHAT_RANK-", new Pair<>(ResponseType.CHAT_RANK_CHANGE, new StatusDisassembler()) );
         responseMap.put("ANS_DEL_CHAT-", new Pair<>(ResponseType.CHAT_DEL_USER, new StatusDisassembler()) );
         responseMap.put("ANS_DES_CHAT-", new Pair<>(ResponseType.CHAT_DESTROY, new StatusDisassembler()) );
-        responseMap.put("CMD_DES_CHAT-", new Pair<>(ResponseType.CMD_CHAT_DESTROY, new CmdChangeChatDisassembler()) );
+        responseMap.put("CMD_DES_CHAT-", new Pair<>(ResponseType.CMD_CHAT_DESTROY, new CmdDestroyChat()) );
         responseMap.put("ANS_SEND_DATA-", new Pair<>(ResponseType.MESSAGE_ANS, new MessageDisassembler()) );
         responseMap.put("CMD_WRITE_DATA-", new Pair<>(ResponseType.MESSAGE_CMD, new CmdMessageDisassembler()) );
         responseMap.put("ANS_CONN_END-", new Pair<>(ResponseType.DISCONNECT, new StatusDisassembler()) );
@@ -70,16 +73,17 @@ public class Receiver extends Thread{
         secretKey = key;
     }
 
-    public void setDataOutputStream(DataInputStream stream){
+    public void setDataInputStream(DataInputStream stream){
         inStream = stream;
     }
 
     @Override
     public void run(){
+        shutdown = false;
         initCipher();
         while (true) {
             //if client connection end
-            if (isInterrupted()){
+            if (isInterrupted() || shutdown){
                 break;
             }
 
@@ -90,6 +94,7 @@ public class Receiver extends Thread{
                 encrypteddMessage = inStream.readNBytes( (int) bytes);
             } catch (IOException e){
                 Logger.getLogger().logError("Error while receiving message (Receiver)");
+                break;
             }
 
             //decripting message
@@ -123,11 +128,15 @@ public class Receiver extends Thread{
     }
 
     private void fillResponse(String message){
-        int cmdEndIndex = message.indexOf('-');
-        String messageCode = message.substring(0, cmdEndIndex);
+        int cmdEndIndex = message.indexOf("-");
+        
+        String messageCode = message.substring(0, cmdEndIndex + 1);
+        if (messageCode.equals("ANS_CONN_END-")){
+            shutdown = true;
+        }
         Pair<ResponseType, DisassemblerInterFace> messageType = responseMap.get(messageCode);
         if (messageType != null){
-            String args = messageCode.substring(cmdEndIndex + 1);
+            String args = message.substring(cmdEndIndex + 1);
             ResponseType response = messageType.getKey();
             //if CMD create new Message and insert
             if (response.equals(ResponseType.CMD_CHAT_DESTROY) || response.equals(ResponseType.CMD_CHAT_NAME_CHANGE)
@@ -136,6 +145,7 @@ public class Receiver extends Thread{
                 Message mesg = new Message(null, null, null, null, null, null);
                 messageType.getValue().dissasembly(args, mesg);
                 pendingMessages.add(new Pair<ResponseType,Message>(response, mesg));
+                
             } else { //else respond to sent request
                 Iterator<Pair<ResponseType, Message> > iter = pendingMessages.iterator();
                 while (iter.hasNext()) {
