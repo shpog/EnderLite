@@ -1,7 +1,6 @@
 package com.EnderLite.GUI.MainView;
 
 import java.io.IOException;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -143,7 +142,7 @@ public class MainViewController {
                     /*
                      * TODO
                      */
-                    addMessage(messageField.getText(), DataController.getDataController().getUserLogin(), LocalTime.now(), false);
+                    addMessage(messageField.getText(), DataController.getDataController().getUserLogin(), "00:00", false);
                     messageField.setText("");
                 }
             }
@@ -351,11 +350,11 @@ public class MainViewController {
         }
     }
 
-    public void addMessage(String message, String login, LocalTime time, boolean user){
+    public void addMessage(String message, String login, String time, boolean user){
         Label loginLabel = new Label(login);
         Text text = new Text(message);
         text.setFont(new Font(15));
-        Label timeLabel = new Label(time.getHour() + ":" + time.getMinute());
+        Label timeLabel = new Label(time);
         HBox hBox = new HBox(loginLabel, timeLabel);
         hBox.setSpacing(10);
         VBox vBox = new VBox(hBox, text);

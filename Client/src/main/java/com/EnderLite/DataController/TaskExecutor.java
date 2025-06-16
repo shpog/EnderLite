@@ -39,6 +39,7 @@ public class TaskExecutor extends Thread{
                 wait(interval);
             } catch (InterruptedException e) {
                 Logger.getLogger().logError("Error while waiting (TaskExecutor)");
+                break;
             }
 
             if ( !pendingMessages.isEmpty() ){
@@ -58,24 +59,52 @@ public class TaskExecutor extends Thread{
         switch (actionType) {
             case AUTH_STATUS:
                 dataController.ansAuthStatus(mesg.getStatus());
+                if (mesg.getStatus().equals(ResponseStatus.ACCEPTED)){
+                    dataController.getUserData().setLogin(mesg.getLogin());
+                    dataController.getUserData().setEmail(mesg.getEmail());
+                }
                 break;
             case CREATE_USER:
                 dataController.ansCreateStatus(mesg.getStatus());
+                if (mesg.getStatus().equals(ResponseStatus.ACCEPTED)){
+                    dataController.getUserData().setLogin(mesg.getLogin());
+                    dataController.getUserData().setEmail(mesg.getEmail());
+                }
                 break;
             case USER_DATA:
                 if (mesg.getStatus().equals(ResponseStatus.ACCEPTED)){
-                    
+                    dataController.getUserData().setLogin(mesg.getLogin());
+                    dataController.getUserData().setEmail(mesg.getEmail());
+                    for (String friend : mesg.getLogins()){
+                        dataController.addFriend(friend);
+                    }
+                    for (String chats : mesg.getChats()){
+                        dataController.addChat(chats, Rank.USER);
+                    }
+                } else {
+                    dataController.sendNotification("Błąd pobierania danych", true);
                 }
                 break;
             case INV_CMD:
+                dataController.sendInviteNotification(mesg.getLogin());
                 break;
             case INV_ANS:
+                if (mesg.getStatus().equals(ResponseStatus.ACCEPTED)){
+                    dataController.addFriend(mesg.getEmail());
+                }
                 break;
-            case DEL_CMD:
+            case DEL_CMD: //nothing
                 break;
-            case DEL_ANS:
+            case DEL_ANS: //nothing
                 break;
             case CHAT_CREATE:
+                if (mesg.getStatus().equals(ResponseStatus.ACCEPTED)){
+
+                } else {
+                    /*
+                     * TODO
+                     */
+                }
                 break;
             case CHAT_ADD_USER:
                 break;
@@ -92,10 +121,10 @@ public class TaskExecutor extends Thread{
             case CMD_CHAT_DESTROY:
                 break;
             case MESSAGE_ANS:
-                dataController.addMessageToView(mesg.getPassw(), mesg.getLogin(), null, true);
+                dataController.addMessageToView(mesg.getPassw(), mesg.getLogin(), mesg.getLogins().get(0), true);
                 break;
             case MESSAGE_CMD:
-                dataController.addMessageToView(mesg.getPassw(), mesg.getLogin(), null, false);
+                dataController.addMessageToView(mesg.getPassw(), mesg.getLogin(), mesg.getLogins().get(0), false);
                 break;
             case DISCONNECT:
                 break;

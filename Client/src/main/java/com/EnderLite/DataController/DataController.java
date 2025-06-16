@@ -1,7 +1,6 @@
 package com.EnderLite.DataController;
 
 import java.io.IOException;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -358,8 +357,16 @@ public class DataController {
         return getAuthStatus();
     }
 
-    public void addMessageToView(String message, String login, LocalTime time, boolean user){
+    public void addMessageToView(String message, String login, String time, boolean user){
         mainViewController.addMessage(message, login, time, user);
+    }
+
+    void sendNotification(String text, boolean time){
+
+    }
+
+    void sendInviteNotification(String login){
+
     }
 
     //Used to retrive data or update userData
