@@ -12,8 +12,8 @@ public class Message{
     
     public Message(String login, String email, String passw, List<String> logins, List<String> chats, ResponseStatus status){
         this.login = login;
-        this.email = login;
-        this.passw = login;
+        this.email = email;
+        this.passw = passw;
         this.logins = logins;
         this.chats = chats;
         this.status = status;

@@ -11,19 +11,20 @@ public class MessageDisassembler implements DisassemblerInterFace{
     
     @Override
     public void dissasembly(String message, Message mesg){
-        if (message.startsWith("ACCEPT")){
+        String[] parts = message.split("-");
+        if (parts[0].equals("ACCEPT")){
             mesg.setStatus(ResponseStatus.ACCEPTED);
-            String time = message.substring(message.indexOf("-") + 1);
             List<String> timeList = new ArrayList<>();
-            timeList.add(time);
+            timeList.add(parts[1]);
             mesg.setLogins(timeList);
-        } else if (message.startsWith("DENIED")){
-            String checkReason = message.substring("DENIED".length());
-            if (checkReason.startsWith("-NAME")){
-                mesg.setStatus(ResponseStatus.DENIED);
-            } else if (checkReason.startsWith("-DENIED")) {
+        } else if (parts[0].equals("DENIED")){
+            if (parts[1].equals("NAME")){
+                mesg.setStatus(ResponseStatus.NAME);
+            } else if (parts[1].equals("ERROR")){
                 mesg.setStatus(ResponseStatus.ERROR);
-            }
+            } else {
+                mesg.setStatus(ResponseStatus.DENIED);
+            }   
         }
     }
 }

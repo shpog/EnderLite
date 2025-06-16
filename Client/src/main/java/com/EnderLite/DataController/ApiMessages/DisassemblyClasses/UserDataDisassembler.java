@@ -12,7 +12,7 @@ public class UserDataDisassembler implements DisassemblerInterFace{
     
     @Override
     public void dissasembly(String message, Message mesg){
-        if (message.startsWith("-DENIED")){
+        if (message.startsWith("DENIED")){
             mesg.setStatus(ResponseStatus.ERROR);
         } else {
             String login = null;

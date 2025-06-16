@@ -2,14 +2,17 @@ package com.EnderLite.DataController.ApiMessages.DisassemblyClasses;
 
 import com.EnderLite.DataController.ApiMessages.DisassemblerInterFace;
 import com.EnderLite.DataController.ApiMessages.Message;
+import com.EnderLite.DataController.ApiMessages.ResponseStatus;
 
 public class CmdChangeChatDisassembler implements DisassemblerInterFace{
+    
     @Override
     public void dissasembly(String message, Message mesg){
-        int newChatNameIndex = message.indexOf("-");
-        String oldChatName = message.substring(0, newChatNameIndex);
-        String newChatName = message.substring(newChatNameIndex + 1);
+        String[] parts = message.split("-");
+        String oldChatName = parts[0];
+        String newChatName = parts[1];
         mesg.setEmail(oldChatName);
         mesg.setPassw(newChatName);
+        mesg.setStatus(ResponseStatus.NO_ANSWER);
     }
 }

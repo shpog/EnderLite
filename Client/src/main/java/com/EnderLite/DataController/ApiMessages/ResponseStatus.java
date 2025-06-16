@@ -6,5 +6,8 @@ public enum ResponseStatus {
     ERROR,
     EMAIL,
     LOGIN,
-    NO_ANSWER
+    NO_ANSWER,
+    NAME,
+    NOACCESS,
+    USED
 }

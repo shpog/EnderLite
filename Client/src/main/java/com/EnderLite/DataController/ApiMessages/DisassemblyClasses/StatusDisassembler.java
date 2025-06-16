@@ -8,18 +8,29 @@ public class StatusDisassembler implements DisassemblerInterFace{
     
     @Override
     public void dissasembly(String message, Message mesg){
-        if ( message.startsWith("ACCEPT") ){
+        String[] parts = message.split("-");
+        if (parts[0].equals("ACCEPT")){
             mesg.setStatus(ResponseStatus.ACCEPTED);
-        } else if (message.startsWith("DENIED")){
-            String checkReason = message.substring("DENIED".length());
-            if (checkReason.startsWith("-EMAIL")){
-                mesg.setStatus(ResponseStatus.EMAIL);
-            } else if (checkReason.startsWith("-LOGIN")){
-                mesg.setStatus(ResponseStatus.LOGIN);
-            } else if (checkReason.startsWith("-DENIED")) {
-                mesg.setStatus(ResponseStatus.ERROR);
-            } else {
-                mesg.setStatus(ResponseStatus.DENIED);
+        } else if (parts[0].equals("DENIED")){
+            switch (parts[1]) {
+                case "EMAIL":
+                    mesg.setStatus(ResponseStatus.EMAIL);
+                    break;
+                case "LOGIN":
+                    mesg.setStatus(ResponseStatus.LOGIN);
+                    break;
+                case "NOACCESS":
+                    mesg.setStatus(ResponseStatus.NOACCESS);
+                    break;
+                case "ERROR":
+                    mesg.setStatus(ResponseStatus.ERROR);
+                    break;
+                case "USED":
+                    mesg.setStatus(ResponseStatus.USED);
+                    break;
+                default:
+                    mesg.setStatus(ResponseStatus.DENIED);
+                    break;
             }
         } else {
             mesg.setStatus(ResponseStatus.NO_ANSWER);

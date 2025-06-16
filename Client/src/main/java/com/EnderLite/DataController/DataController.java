@@ -1,5 +1,6 @@
 package com.EnderLite.DataController;
 
+import java.io.IOException;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +9,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.EnderLite.Connection.ConnectionController;
+import com.EnderLite.Connection.Receiver;
+import com.EnderLite.Connection.Transmitter;
 import com.EnderLite.DataController.ApiMessages.Message;
 import com.EnderLite.DataController.ApiMessages.ResponseStatus;
 import com.EnderLite.DataController.ApiMessages.ResponseType;
@@ -23,7 +26,11 @@ public class DataController {
     private static volatile DataController instance;
     private volatile ChatData activeChat;
     private volatile ConnectionController connectionController;
-    //viewCOntrollers references
+    //message transmission and execute
+    private Receiver receiver;
+    private Transmitter transmitter;
+    private TaskExecutor taskExecutor;
+    //viewControllers references
     private MainViewController mainViewController;
     //queues
     private BlockingQueue<String> dataOutQueue;
@@ -60,11 +67,57 @@ public class DataController {
     public boolean establishConnection(String host, int port){
         connectionController = new ConnectionController(host, port);
         boolean connection = connectionController.establishConnection();
-        /*
-         * TODO: Create thread after establishing Connection and taskScheduler
-         */
+        if (connection){
+            //Receiver thread configuration
+            receiver = new Receiver();
+            receiver.setSecretKey(connectionController.getAESKey());
+            try{
+                receiver.setDataInputStream(connectionController.getDataInputStream());
+            } catch (IOException e){
+                Logger.getLogger().logError("Error while transfering DataInputStream! (DataController)");
+            }
+            receiver.setDataQueue(pendingMesgQueue);
+
+            //Transmitter thread configuration
+            transmitter = new Transmitter();
+            transmitter.setSecretKey(connectionController.getAESKey());
+            try{
+                transmitter.setDataOutputStream(connectionController.getDataOutputStream());
+            } catch (IOException e){
+                Logger.getLogger().logError("Error while transfering DataOutputStream! (DataController)");
+            }
+            transmitter.setDataQueue(dataOutQueue);
+            
+            //task executor configuration
+            taskExecutor = new TaskExecutor();
+            taskExecutor.setInterval(200);
+            taskExecutor.setDataController(instance);
+            taskExecutor.setPendingQueue(pendingMesgQueue);
+
+            //start threads
+            receiver.start();
+            transmitter.start();
+            taskExecutor.start();
+        }
 
         return connection;
+    }
+
+    public void closeConnection(){
+        transmitter.interrupt();
+        receiver.interrupt();
+        taskExecutor.interrupt();
+        try{
+            connectionController.closeStreams();
+        } catch (IOException e){
+            Logger.getLogger().logError("Error while closing streams (DataCOntroller)");
+        }
+    }
+
+    public void clearDataController(){
+        dataOutQueue.clear();
+        pendingMesgQueue.clear();
+        authStatus = null;
     }
 
     public void setChatActive(ChatData chatId){
@@ -97,7 +150,7 @@ public class DataController {
     }
 
     public void reqAuthStatus(){
-        String mesg = "AUTH_STATUS";
+        String mesg = "AUTH_STATUS-";
         try{
             dataOutQueue.put(mesg);
         } catch (InterruptedException e){
@@ -118,7 +171,7 @@ public class DataController {
         ansCreateStatus(null);
 
         Message dataContainer = new Message(login, email, passw, null, null, null);
-        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CREATE_USER, dataContainer));
     }
 
     public void reqUserData(){
@@ -130,7 +183,7 @@ public class DataController {
         }
 
         Message dataContainer = new Message(getUserLogin(), null, null, null, null, null);
-        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.USER_DATA, dataContainer));
     }
 
     public void reqInvUser(String login, String email) {
@@ -147,7 +200,7 @@ public class DataController {
         }
 
         Message dataContainer = new Message(getUserLogin(), email, login, null, null, null);
-        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.INV_ANS, dataContainer));
     }
 
     public void reqInvAnswer(String login, boolean accepted){
@@ -198,11 +251,11 @@ public class DataController {
         }
 
         Message dataContainer = new Message(getUserLogin(), chatId, null, userlogins, null, null);
-        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_ADD_USER, dataContainer));
     }
 
     public void reqChangeChatName(String oldChatId, String newChatId){
-        String mesg = "REQ_CHAN_CHAT_RANK-" + userData.getLogin() + "-" + oldChatId + "-" + newChatId;
+        String mesg = "REQ_CHAN_CHAT_NAME-" + userData.getLogin() + "-" + oldChatId + "-" + newChatId;
         try{
             dataOutQueue.put(mesg);
         } catch (InterruptedException e){
@@ -210,7 +263,7 @@ public class DataController {
         }
 
         Message dataContainer = new Message(getUserLogin(), oldChatId, newChatId, null, null, null);
-        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_NAME_CHANGE, dataContainer));
     }
 
     public void reqChangeChatRank(String chatId, String login, boolean admin) {
@@ -224,7 +277,7 @@ public class DataController {
         List<String> ranga = new ArrayList<>();
         ranga.add( admin ? "A" : "U");
         Message dataContainer = new Message(getUserLogin(), chatId, login, ranga, null, null);
-        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_RANK_CHANGE, dataContainer));
     }
 
     public void reqRemoveUserFromChat(String chatId, List<String> userlogins){
@@ -240,7 +293,7 @@ public class DataController {
         }
 
         Message dataContainer = new Message(getUserLogin(), chatId, null, userlogins, null, null);
-        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_DEL_USER, dataContainer));
     }
 
     public void reqDestroyChat(String chatId){
@@ -252,7 +305,7 @@ public class DataController {
         }
 
         Message dataContainer = new Message(getUserLogin(), chatId, null, null, null, null);
-        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_DESTROY, dataContainer));
     }
 
     public void reqSendMessage(String text){
@@ -264,7 +317,7 @@ public class DataController {
         }
 
         Message dataContainer = new Message(getUserLogin(), activeChat.getId(), text, null, null, null);
-        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.MESSAGE_ANS, dataContainer));
     }
 
     public void reqDisconnect(){
@@ -276,7 +329,7 @@ public class DataController {
         }
 
         Message dataContainer = new Message(null, null, null, null, null, null);
-        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.CHAT_CREATE, dataContainer));
+        pendingMesgQueue.add(new Pair<ResponseType,Message>(ResponseType.DISCONNECT, dataContainer));
     }
 
     //Response status and action
@@ -339,5 +392,6 @@ public class DataController {
     public void setMainViewController(MainViewController controller){
         this.mainViewController = controller;
     }
+
 
 }
