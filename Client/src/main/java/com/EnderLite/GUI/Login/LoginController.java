@@ -68,7 +68,6 @@ public class LoginController{
             public void handle(MouseEvent event){
                 if (checkCredentials()){
                     DataController dataController = DataController.getDataController();
-                    dataController.reqUserData();
                     ResponseStatus status = null;
                     try{
                         status = waithForAuth(dataController);
@@ -76,7 +75,10 @@ public class LoginController{
                         Logger.getLogger().logError("Interrupt exception login (waitForAuth)");
                     }
                     
-                    
+                    status = ResponseStatus.ACCEPTED;
+                    /*
+                     * TODO
+                     */
                     if (status == null){
                         badPassw.setText("Błąd połączenia! Spróbuj ponownie");
                         badPassw.setVisible(true);
@@ -86,6 +88,7 @@ public class LoginController{
                         badLoginEmail.setVisible(true);
                     } else if (status == ResponseStatus.ACCEPTED){
                         try{
+                            dataController.reqUserData();
                             handleSwitchToMainView();
                         } catch (IOException e){
                             Logger.getLogger().logError("Error while changing from login to main view");

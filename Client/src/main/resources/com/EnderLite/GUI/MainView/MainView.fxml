@@ -38,7 +38,7 @@
                      </content></ScrollPane>
                   <HBox prefHeight="100.0" prefWidth="200.0">
                      <children>
-                        <TextField fx:id="messageFIeld" prefHeight="51.0" prefWidth="484.0" promptText="Type message here">
+                        <TextField fx:id="messageField" prefHeight="51.0" prefWidth="484.0" promptText="Type message here">
                            <HBox.margin>
                               <Insets left="8.0" right="8.0" top="8.0" />
                            </HBox.margin>
