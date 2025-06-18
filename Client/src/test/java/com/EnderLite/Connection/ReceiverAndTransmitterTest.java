@@ -72,14 +72,15 @@ public class ReceiverAndTransmitterTest {
     @AfterEach
     public void cleanUp(){
         Logger.getLogger().logInfo("Cleaning....");
-        server.interrupt();
-        transmitter.interrupt();
-        receiver.interrupt();
+        
         try{
             connController.closeStreams();
         } catch (IOException e){
             Logger.getLogger().logError("Error while closing streams (DataCOntroller)");
         }
+        server.interrupt();
+        transmitter.interrupt();
+        receiver.interrupt();
         //wait for thread
         try{
             server.join();
@@ -92,6 +93,11 @@ public class ReceiverAndTransmitterTest {
         dataOutQueue.clear();
         // pendingMesgQueue.notifyAll();
         pendingMesgQueue.clear();
+        try{
+            TimeUnit.MILLISECONDS.sleep(400);
+        } catch (InterruptedException e){
+
+        }
     }
 
     /////////////////////////////////// AUTHORIZATION ///////////////////////////////

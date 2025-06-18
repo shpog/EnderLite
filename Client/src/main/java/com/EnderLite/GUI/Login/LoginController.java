@@ -75,10 +75,6 @@ public class LoginController{
                         Logger.getLogger().logError("Interrupt exception login (waitForAuth)");
                     }
                     
-                    status = ResponseStatus.ACCEPTED;
-                    /*
-                     * TODO
-                     */
                     if (status == null){
                         badPassw.setText("Błąd połączenia! Spróbuj ponownie");
                         badPassw.setVisible(true);

@@ -64,9 +64,8 @@ public final class  ConnectionController {
         }
 
         //check if server responds
-        handshake();
 
-        return true;
+        return handshake();
     }
 
     public SecretKey getAESKey(){

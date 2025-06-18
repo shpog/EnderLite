@@ -138,11 +138,6 @@ public class MainViewController {
             public void handle(MouseEvent event){
                 if (!messageField.getText().isEmpty()){
                     DataController.getDataController().reqSendMessage(messageField.getText());
-                    
-                    /*
-                     * TODO
-                     */
-                    addMessage(messageField.getText(), DataController.getDataController().getUserLogin(), "00:00", false);
                     messageField.setText("");
                 }
             }
@@ -177,7 +172,6 @@ public class MainViewController {
                             return;
                         }
                         DataController.getDataController().reqInvUser(textField.getText(), null);
-                        DataController.getDataController().getUserData().addFriend(textField.getText());
                         textField.setText("");
                         popup.hide();
                     }
@@ -214,7 +208,6 @@ public class MainViewController {
                             return;
                         }
                         DataController.getDataController().reqCreateChat(textField.getText());
-                        DataController.getDataController().getUserData().addChat(textField.getText(), Rank.USER);
                         textField.setText("");
                         popup.hide();
                     }

@@ -27,16 +27,19 @@ public class ConnectionControllerTest {
 
         assertTrue(controller.establishConnection());
         serverThread.interrupt();
-        try{
-            serverThread.join();
-        } catch (InterruptedException e){
-            Logger.getLogger().logError("Error while waiting for threads (Test)");
-        }
+
+
         try{
             controller.closeStreams();
         } catch (IOException e){
             Logger.getLogger().logError("Erro while closing sockets Test");
         }
+                try{
+            serverThread.join();
+        } catch (InterruptedException e){
+            Logger.getLogger().logError("Error while waiting for threads (Test)");
+        }
+        
         System.out.println(serverThread.handshakeFirstMessage);
         System.out.println("2 message: " + serverThread.handshakeSecondMessage);
         System.out.println("3 message: " + serverThread.handshakeThirdMessage);

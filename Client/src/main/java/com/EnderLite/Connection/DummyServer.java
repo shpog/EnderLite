@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -78,7 +79,7 @@ public class DummyServer extends Thread{
             socIn = new DataInputStream(socket.getInputStream());
             socOut = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
-            System.err.println("Error while connecting!");
+            System.err.println("Error while connecting! (openServer)");
             return false;
         }
          return true;
@@ -195,9 +196,12 @@ public class DummyServer extends Thread{
     @Override
     public void run(){
         while (openServer() == false){
-            if (this.isInterrupted()){
-                return;
-            }
+            return;
+        }
+        try{
+            socket.setSoTimeout(20000);
+        } catch (SocketException e){
+            Logger.getLogger().logError("Socket exception (server)");
         }
         handshakeAccepted = false;
         if (handshakeTest()){ //code after handshake if handshakeOnly false
@@ -244,10 +248,12 @@ public class DummyServer extends Thread{
             }
         }
         closeServer();
+        System.out.println("Server shutdown!");
     }
 
     public String readAndDecipher(){
         byte[] encrypteddMessage = null;
+            
         try{
             long bytes = socIn.readLong();
             encrypteddMessage = socIn.readNBytes( (int) bytes);

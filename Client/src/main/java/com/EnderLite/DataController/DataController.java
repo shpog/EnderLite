@@ -89,7 +89,7 @@ public class DataController {
             
             //task executor configuration
             taskExecutor = new TaskExecutor();
-            taskExecutor.setInterval(200);
+            taskExecutor.setInterval(400);
             taskExecutor.setDataController(instance);
             taskExecutor.setPendingQueue(pendingMesgQueue);
 
@@ -97,6 +97,7 @@ public class DataController {
             receiver.start();
             transmitter.start();
             taskExecutor.start();
+            Logger.getLogger().logInfo("setUp ready!");
         }
 
         return connection;
