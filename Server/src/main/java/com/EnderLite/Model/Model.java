@@ -32,6 +32,18 @@ public class Model {
         user.Email = jsonObject.getString("email");
         user.PasswordHash = jsonObject.getString("passwordHash");
 
+        user.FriendsList = new ArrayList<UUID>();
+        JSONArray friendsList = jsonObject.getJSONArray("friendsList");
+        for (int i = 0; i < friendsList.length(); i++) {
+            user.FriendsList.add(UUID.fromString(friendsList.getString(i)));
+        }
+
+        user.ChatsList = new ArrayList<UUID>();
+        JSONArray chatsList = jsonObject.getJSONArray("chatsList");
+        for (int i = 0; i < chatsList.length(); i++) {
+            user.ChatsList.add(UUID.fromString(friendsList.getString(i)));
+        }
+
         return user;
     }
 
@@ -39,11 +51,44 @@ public class Model {
         return getUser(UUID.fromString(uuid));
     }
 
+    public User findUser(String key) {
+        try {
+            Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
+            String[] allUsers = prefs.keys();
+            for (String uuid : allUsers) {
+                JSONObject jsonObject = new JSONObject(uuid);
+                if (jsonObject.getString("login") == key || jsonObject.getString("email") == key) {
+                    return getUser(prefs.get(uuid,
+                            "{\"login\":\"none\",\"email\":\"none\",\"passwordHash\":\"none\"}"));
+                }
+            }
+            prefs.sync();
+            return null;
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public User modifyOrCreateUser(User user) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("login", user.Login);
         jsonObject.put("email", user.Email);
         jsonObject.put("passwordHash", user.PasswordHash);
+
+        JSONArray friendsList = new JSONArray();
+        for (int i = 0; i < user.FriendsList.size(); i++) {
+            friendsList.put(user.FriendsList.get(i).toString());
+        }
+
+        jsonObject.put("friendsList", friendsList);
+
+        JSONArray chatsList = new JSONArray();
+        for (int i = 0; i < user.ChatsList.size(); i++) {
+            chatsList.put(user.ChatsList.get(i).toString());
+        }
+
+        jsonObject.put("chatsList", chatsList);
 
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
         prefs.put(user.ID.toString(), jsonObject.toString());
@@ -97,12 +142,20 @@ public class Model {
         Chat chat = new Chat();
         chat.ID = uuid;
         chat.Name = jsonObject.getString("name");
-        chat.Members = new ArrayList<User>();
+        chat.Members = new ArrayList<UUID>();
+        chat.Admins = new ArrayList<UUID>();
 
         JSONArray members = jsonObject.getJSONArray("members");
         for (int i = 0; i < members.length(); i++) {
-            chat.Members.add(getUser(members.getString(i)));
+            chat.Members.add(UUID.fromString(members.getString(i)));
         }
+
+        JSONArray admins = jsonObject.getJSONArray("admins");
+        for (int i = 0; i < admins.length(); i++) {
+            chat.Admins.add(UUID.fromString(admins.getString(i)));
+        }
+
+        // TODO GET MESSAGES
 
         return chat;
     }
@@ -116,6 +169,22 @@ public class Model {
         jsonObject.put("name", chat.Name);
         // jsonObject.put("email", user.Email);
         // jsonObject.put("passwordHash", user.PasswordHash);
+
+        JSONArray members = new JSONArray();
+        for (int i = 0; i < chat.Members.size(); i++) {
+            members.put(chat.Members.get(i).toString());
+        }
+
+        jsonObject.put("members", members);
+
+        JSONArray admins = new JSONArray();
+        for (int i = 0; i < chat.Admins.size(); i++) {
+            admins.put(chat.Admins.get(i).toString());
+        }
+
+        jsonObject.put("admins", admins);
+
+        // TODO GET MESSAGES
 
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
         prefs.put(chat.ID.toString(), jsonObject.toString());

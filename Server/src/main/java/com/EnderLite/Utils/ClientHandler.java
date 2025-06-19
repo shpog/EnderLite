@@ -8,12 +8,33 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.Authenticator.RequestorType;
 
+import java.net.SocketException;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
+import java.security.Security;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 public class ClientHandler implements Runnable {
     private Controller ctrl;
     private final Socket clientSocket;
 
     private DataOutputStream out;
     private DataInputStream in;
+
+    public volatile SecretKey secretKey;
 
     public ClientHandler(Socket socket) {
         clientSocket = socket;
@@ -41,6 +62,75 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    public boolean handshake() {
+        Security.addProvider(new BouncyCastleProvider());
+
+        byte[] receivedBytes = readBytes();
+        String handshakeFirstMessage = new String(receivedBytes);
+        if (!handshakeFirstMessage.startsWith("EnderLite_Client_"))
+            return false;
+        // Stage 2 Get Public key, Create AES key and send encrypted message
+        String key = handshakeFirstMessage.substring("EnderLite_Client_".length());
+        byte[] keyBytes = java.util.Base64.getDecoder().decode(key);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+
+        // get RSA public key
+        PublicKey publicKey = null;
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA", "BC");
+            publicKey = keyFactory.generatePublic(spec);
+        } catch (NoSuchAlgorithmException e) {
+            System.err.println("No such algorithm! RSA second stage handshake!");
+        } catch (InvalidKeySpecException e) {
+            System.err.println("Invalid key spec! RSA second stage handshake");
+        } catch (NoSuchProviderException e) {
+            System.err.println("No such Provider! RSA second stage handshake");
+        }
+
+        // generate AES key
+        try {
+            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+            keyGen.init(128);
+            secretKey = keyGen.generateKey();
+        } catch (NoSuchAlgorithmException e) {
+            System.err.println("No such algorithm AES second stage handshake!");
+        }
+
+        // endcypt and send
+        String handshakeSecondMessage = "ACCEPT_SERVER_" +
+                java.util.Base64.getEncoder().encodeToString(secretKey.getEncoded());
+        try {
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC");
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+            sendBytes(cipher.doFinal(handshakeSecondMessage.getBytes()));
+        } catch (Exception e) {
+            System.err.println("Don't care now!");
+        }
+
+        // Stage 3
+        receivedBytes = readBytes();
+        try {
+            Cipher cipher = Cipher.getInstance("AES", "BC");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            receivedBytes = cipher.doFinal(receivedBytes);
+        } catch (Exception e) {
+
+        }
+
+        String handshakeThirdMessage = new String(receivedBytes);
+        if (!handshakeThirdMessage.startsWith("ACCEPT_CLIENT_")) {
+            return false;
+        }
+
+        // getAES key nad check if the same
+        String AESKey = handshakeThirdMessage.substring("ACCEPT_CLIENT_".length());
+        if (!AESKey.equals(java.util.Base64.getEncoder().encodeToString(secretKey.getEncoded()))) {
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     public void run() {
         try {
@@ -50,6 +140,11 @@ public class ClientHandler implements Runnable {
 
             String line;
             String response = "";
+
+            if (!handshake())
+                System.out
+                        .println("Client " + clientSocket.getInetAddress() + " handshake failed. Forcing disconnect.");
+
             while (true) {
                 byte[] receivedBytes = readBytes();
                 if (receivedBytes == null || receivedBytes.length == 0) {
@@ -91,19 +186,11 @@ public class ClientHandler implements Runnable {
                     }
                 }
 
-                else if (line.startsWith("REQ_USER_DATA_LOGIN-")) {
+                else if (line.startsWith("REQ_USER_DATA-")) {
                     String[] parts = line.split("-");
                     if (parts.length == 2) {
                         String requestedLogin = parts[1];
-                        response = ctrl.REQ_USER_DATA_LOGIN(requestedLogin);
-                    }
-                }
-
-                else if (line.startsWith("REQ_USER_DATA_EMAIL-")) {
-                    String[] parts = line.split("-");
-                    if (parts.length == 2) {
-                        String requestedEmail = parts[1];
-                        response = ctrl.REQ_USER_DATA_EMAIL(requestedEmail);
+                        response = ctrl.REQ_USER_DATA(requestedLogin);
                     }
                 }
 
@@ -142,6 +229,16 @@ public class ClientHandler implements Runnable {
                         String invitedUser = parts[2];
                         String status = parts[3]; // ACCEPTED or DENIED
                         response = ctrl.REQ_INV_STATUS(invitingUser, invitedUser, status);
+                    }
+                }
+
+                else if (line.startsWith("REQ_DEL_LOG-")) {
+                    String[] parts = line.split("-");
+                    if (parts.length == 3) {
+                        String userToDelete = parts[1];
+                        String deletingUser = parts[2];
+
+                        ctrl.REQ_DEL_LOG(userToDelete, deletingUser);
                     }
                 }
 

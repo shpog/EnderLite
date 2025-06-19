@@ -1,94 +1,116 @@
 package com.EnderLite.Controller;
 
+import java.lang.reflect.Modifier;
+
 import com.EnderLite.Model.*;
+import java.util.UUID;
 
 public class Controller {
-    public Controller() {
 
+    public Boolean isAuth = false;
+    public Model model;
+    public User user;
+
+    public Controller() {
+        model = new Model();
     }
 
     public String AUTH_LOG(String login, String password) {
-        String response = "";
-        if ("test_login".equals(login) && "test_password".equals(password)) {
-            return "AUTH_RESP-ACCEPTED";
-            // Optionally, store client's authenticated status here
+        try {
+            user = model.findUser(login);
+            if (user.PasswordHash.equals(password)) {
+                isAuth = true;
+                return "AUTH_RESP-" + user.Login + "-" + user.Email;
+            }
+            return "AUTH_RESP-DENIED";
+
+        } catch (Error e) {
+            e.printStackTrace();
         }
         return "AUTH_RESP-DENIED";
     }
 
     public String AUTH_EMAIL(String email, String password) {
-        String response = "";
-        if ("test@example.com".equals(email) && "test_password".equals(password)) {
-            return "AUTH_RESP-ACCEPTED";
-            // Optionally, store client's authenticated status here
+        try {
+            user = model.findUser(email);
+            if (user.PasswordHash.equals(password)) {
+                isAuth = true;
+                return "AUTH_RESP-" + user.Login + "-" + user.Email;
+            }
+            return "AUTH_RESP-DENIED";
+
+        } catch (Error e) {
+            e.printStackTrace();
         }
         return "AUTH_RESP-DENIED";
     }
 
     public String AUTH_STATUS() {
-        // TODO: Check client's authentication status
-        // For now, assuming authenticated:
-        boolean isAuthenticated = false; // Replace with actual status check
-        if (isAuthenticated) {
-            return "AUTH-RESPONSE_ACCEPTED";
+        if (isAuth) {
+            return "AUTH_RESP-login-email";
         }
         return "AUTH-RESPONSE_DENIED";
     }
 
     public String REQ_ADD_USER(String login, String email, String password) {
-        // TODO: Implement user creation logic
-        // Check for existing login or email in your database
-        boolean loginExists = false; // Replace with actual check
-        boolean emailExists = false; // Replace with actual check
+        try {
+            user = model.findUser(email);
+            if (user != null)
+                if (user.Login == login)
+                    return "ANS_ADD_USER-DENIED-LOGIN";
+                else
+                    return "ANS_ADD_USER-DENIED-EMAIL";
 
-        if (loginExists) {
-            return "ANS_ADD_USER-DENIED-LOGIN";
-        } else if (emailExists) {
-            return "ANS_ADD_USER-DENIED-EMAIL";
+            user = new User();
+            user.Login = login;
+            user.Email = email;
+            user.PasswordHash = password;
+            model.modifyOrCreateUser(user);
+            return "ANS_ADD_USER-" + login + "-" + "email";
+
+        } catch (Error e) {
+            e.printStackTrace();
+            return "ANS_ADD_USER-ERROR";
         }
-
-        // TODO: Add user to database
-        return "ANS_ADD_USER-ACCEPT";
-
     }
 
-    public String REQ_USER_DATA_LOGIN(String requestedLogin) {
-        // TODO: Verify if the requesting client is authorized and if requestedLogin
-        // matches client's login
-        // For now, a placeholder:
-        boolean authorizedAndMatching = true; // Replace with actual logic
-        if (authorizedAndMatching) {
-            // TODO: Fetch user data from database for requestedLogin
-            // Example data format:
-            // L=login-E=email-F={login1,login2}-C={chat1-rank,chat2}-END
+    public String REQ_USER_DATA(String requestedLogin) {
+        if (!isAuth)
+            return "ANS_USER_DATA-DENIED-NOACCESS";
+
+        try {
+            User u = model.findUser(requestedLogin);
+            if (u == null)
+                return "ANS_USER_DATA-DENIED-ERROR";
+
             String userData = "L=" + requestedLogin
-                    + "-E=some@email.com-F={friend1,friend2}-C={chatA-USER,chatB-ADMIN}-END";
+                    + "-E=" + u.Email + "-F={";
+
+            for (UUID uuid : u.FriendsList) {
+                userData += model.getUser(uuid).Login + ",";
+            }
+
+            userData += "}-C={";
+            // userData += "}-C={" + "chatA-USER,chatB-ADMIN";
+            // TODO
+
+            for (UUID uuid : u.ChatsList) {
+                userData += model.getChat(uuid).Name + ",";
+            }
+
+            userData += "}-END";
             return "ANS_USER_DATA-" + userData;
+
+        } catch (Error e) {
+            e.printStackTrace();
+            return "ANS_USER_DATA-DENIED-ERROR";
+
         }
-
-        return "";
-    }
-
-    public String REQ_USER_DATA_EMAIL(String requestedEmail) {
-        // TODO: Verify if the requesting client is authorized and if requestedEmail
-        // matches client's email
-        // For now, a placeholder:
-        boolean authorizedAndMatching = true; // Replace with actual logic
-        if (authorizedAndMatching) {
-            // TODO: Fetch user data from database for requestedEmail
-            // Example data format:
-            // L=login-E=email-F={login1,login2}-C={chat1-rank,chat2}-END
-            String userData = "L=someLogin-E=" + requestedEmail
-                    + "-F={friendA,friendB}-C={chatX-USER,chatY-ADMIN}-END";
-            return "ANS_USER_DATA-" + userData;
-        }
-
-        return "";
     }
 
     /*
      * public String REQ_USERS_LOG(String phrase) {
-     * // TODO: Implement logic to retrieve a list of logins starting with 'phrase'
+     * // Implement logic to retrieve a list of logins starting with 'phrase'
      * // This part requires maintaining state (last sent index) for
      * eachclient/phrase
      * // combination.
@@ -106,7 +128,7 @@ public class Controller {
      * }
      * }
      * if (loginsToSend.length() > 0) {
-     * // TODO: Store the last sent index for this client and phrase
+     * // Store the last sent index for this client and phrase
      * return "ANS_USERS_LOG-L={" + loginsToSend.toString() + "}_END";
      * }
      * 
@@ -116,6 +138,8 @@ public class Controller {
      */
 
     public void REQ_INV_LOG(String userToInvite, String invitingUser) {
+        // if (!isAuth)
+        // return "ANS_USER_DATA-DENIED-NOACCESS";
         // TODO: Implement logic to send CMD_INV_LOG to userToInvite
         // This requires knowledge of other connected clients.
         // response = "Server processed invitation request for " + userToInvite + " from
@@ -132,7 +156,7 @@ public class Controller {
     }
 
     /* DODAć to */
-    public void REQ_DEL_LOG(String userToInvite, String invitingUser) {
+    public void REQ_DEL_LOG(String userToDelete, String deletingUser) {
         // TODO: Implement logic to send CMD_INV_LOG to userToInvite
         // This requires knowledge of other connected clients.
         // response = "Server processed invitation request for " + userToInvite + " from
@@ -140,14 +164,15 @@ public class Controller {
         // CMD_INV_LOG-(login_zapraszającego)
     }
 
-    /* DODAć to */
-    public void CMD_DEL_LOG(String userToInvite, String invitingUser) {
-        // TODO: Implement logic to send CMD_INV_LOG to userToInvite
-        // This requires knowledge of other connected clients.
-        // response = "Server processed invitation request for " + userToInvite + " from
-        // " + invitingUser; // Client receives no direct ACK here
-        // CMD_INV_LOG-(login_zapraszającego)
-    }
+    // /* DODAć to */
+    // public void CMD_DEL_LOG(String userToInvite, String invitingUser) {
+    // // TODO: Implement logic to send CMD_INV_LOG to userToInvite
+    // // This requires knowledge of other connected clients.
+    // // response = "Server processed invitation request for " + userToInvite + "
+    // from
+    // // " + invitingUser; // Client receives no direct ACK here
+    // // CMD_INV_LOG-(login_zapraszającego)
+    // }
 
     public String REQ_INV_STATUS(String invitingUser, String invitedUser, String status) {
         // TODO: Update friend status in database
@@ -185,9 +210,9 @@ public class Controller {
             if (addSuccess) {
                 return "ANS_ADD_CHAT-ACCEPT";
             }
-            return "ANS_ADD_CHAT-ERROR";
+            return "ANS_ADD_CHAT-DENIED-ERROR";
         }
-        return "ANS_ADD_CHAT-NOACCESS";
+        return "ANS_ADD_CHAT-DENIED-NOACCESS";
     }
 
     public String REQ_CHAN_CHAT_NAME(String login, String oldChatName, String newChatName) {
@@ -216,9 +241,9 @@ public class Controller {
             if (rankChangeSuccess) {
                 return "ANS_CHAN_CHAT_RANK-ACCEPT";
             }
-            return "ANS_CHAN_CHAT_RANK-ERROR";
+            return "ANS_CHAN_CHAT_RANK-DENIED-ERROR";
         }
-        return "ANS_CHAN_CHAT_RANK-NOACCESS";
+        return "ANS_CHAN_CHAT_RANK-DENIED-NOACCESS";
     }
 
     public String REQ_DEL_CHAT(String chatName, String sendingLogin, String[] usersToRemove) {
@@ -230,9 +255,9 @@ public class Controller {
             if (removeSuccess) {
                 return "ANS_DEL_CHAT-ACCEPT";
             }
-            return "ANS_DEL_CHAT-ERROR";
+            return "ANS_DEL_CHAT-DENIED-ERROR";
         }
-        return "ANS_DEL_CHAT-NOACCESS";
+        return "ANS_DEL_CHAT-DENIED-NOACCESS";
     }
 
     public String REQ_DES_CHAT(String login, String chatName) {

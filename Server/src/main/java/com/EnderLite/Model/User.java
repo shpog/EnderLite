@@ -8,6 +8,11 @@ public class User {
     public String Login;
     public String Email;
     public String PasswordHash;
-    public ArrayList<User> FriendsList;
-    public ArrayList<Chat> ChatsList;
+    public ArrayList<UUID> FriendsList;
+    public ArrayList<UUID> ChatsList;
+
+    public User() {
+        FriendsList = new ArrayList<UUID>();
+        ChatsList = new ArrayList<UUID>();
+    }
 }
