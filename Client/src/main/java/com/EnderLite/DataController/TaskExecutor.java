@@ -30,6 +30,10 @@ public class TaskExecutor extends Thread{
         this.interval = interval;
     }
 
+    public void shutdown(){
+        shutdown = true;
+    }
+
     @Override
     public void run(){
         Logger.getLogger().logInfo("Started(task executor)");
@@ -103,13 +107,25 @@ public class TaskExecutor extends Thread{
             case INV_ANS:
                 if (mesg.getStatus().equals(ResponseStatus.ACCEPTED)){
                     Platform.runLater(() -> {
-                        dataController.addFriend(mesg.getEmail());
+                        dataController.addFriend(mesg.getPassw());
+                    });
+                } else {
+                    Platform.runLater(() -> {
+                        dataController.sendNotification(mesg.getPassw() + " denied invite!", true);
                     });
                 }
                 break;
-            case DEL_CMD: //nothing
+            case DEL_CMD: 
+                     Platform.runLater(() -> {
+                        dataController.getUserData().removeFriend(mesg.getLogin());
+                        dataController.sendNotification("Znajomy został usunięty:" + mesg.getLogin(), true);
+                    });
                 break;
-            case DEL_ANS: //nothing
+            case DEL_ANS:
+                    Platform.runLater(() -> {
+                        dataController.getUserData().removeFriend(mesg.getPassw());
+                        dataController.sendNotification("Znajomy został usunięty:" + mesg.getPassw(), true);
+                    });
                 break;
             case CHAT_CREATE:
                 if (mesg.getStatus().equals(ResponseStatus.ACCEPTED)){
@@ -117,6 +133,13 @@ public class TaskExecutor extends Thread{
                         dataController.addChat(mesg.getEmail(), Rank.USER);
                     });
                 }
+                break;
+            case CHAT_ADD_CMD:
+                Platform.runLater(() -> {
+                    System.out.println("ADDing chat!");
+                    dataController.addChat(mesg.getLogin(), Rank.USER);
+                    dataController.sendNotification("Added to "+ mesg.getLogin(), true);
+                });
                 break;
             case CHAT_ADD_USER:
                 break;
@@ -139,12 +162,20 @@ public class TaskExecutor extends Thread{
                 break;
             case MESSAGE_CMD:
                 Platform.runLater(() -> {
-                    dataController.addMessageToView(mesg.getPassw(), mesg.getLogin(), mesg.getLogins().get(0), false);
+                    if (dataController.getActiveChat() != null && dataController.getActiveChat().getId().equals(mesg.getEmail())){
+                        System.out.println(mesg.getEmail());
+                        System.out.println(dataController.getActiveChat().getId());
+                        dataController.addMessageToView(mesg.getPassw(), mesg.getLogin(), mesg.getLogins().get(0), false);
+                    }
+                        
                 });
                 break;
             case DISCONNECT:
                 shutdown = true;
                 pendingMessages.notifyAll();
+                Platform.runLater(() -> {
+                    dataController.EmergencyExit();
+                });
                 break;
         }
     }

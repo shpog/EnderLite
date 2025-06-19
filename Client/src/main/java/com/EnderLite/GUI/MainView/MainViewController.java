@@ -3,6 +3,7 @@ package com.EnderLite.GUI.MainView;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.EnderLite.Client;
 import com.EnderLite.DataController.ChatData;
@@ -12,6 +13,7 @@ import com.EnderLite.GUI.Login.LoginController;
 import com.EnderLite.GUI.Settings.SettingsController;
 import com.EnderLite.Logger.Logger;
 
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -79,6 +81,7 @@ public class MainViewController {
 
             @Override
             public void handle(MouseEvent event){
+                DataController.getDataController().reqDisconnect();
                 try{
                     handleLogout();
                 } catch (IOException e){
@@ -369,22 +372,90 @@ public class MainViewController {
         messContVBox.getChildren().clear();
     }
 
-    public void emergencyExit(){
-         final Popup popup = new Popup();
-            popup.setX(addFriendButton.getScene().getWindow().getWidth()/2 + 400);
-            popup.setY(addFriendButton.getScene().getWindow().getHeight()/2 + 100);
-            Label issueLabel = new Label("Connection problem logging out!");
-            Rectangle plane = new Rectangle(160, 80, Color.WHITE);
-            plane.setStroke(Color.BLACK);
-            StackPane stackPane = new StackPane(plane, issueLabel);
-            popup.getContent().addAll(stackPane);
-            popup.show(addChat.getScene().getWindow());
-            try{
-                wait(2000);
-            } catch (InterruptedException e){
-                Logger.getLogger().logError("Error while waiting for 2 s after emergencyExit");
+    public void notification(String text, boolean hideAfterTime){
+        final Popup popup = new Popup();
+        popup.setX(addFriendButton.getScene().getWindow().getWidth()/2 + 400);
+        popup.setY(addFriendButton.getScene().getWindow().getHeight()/2 + 100);
+        Label issueLabel = new Label(text);
+        Rectangle plane = new Rectangle(160, 80, Color.WHITE);
+        plane.setStroke(Color.BLACK);
+        StackPane stackPane = new StackPane(plane, issueLabel);
+        popup.getContent().addAll(stackPane);
+        popup.show(addChat.getScene().getWindow());
+        Thread timer = new Thread(){
+            @Override
+            public void run(){
+                try{
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                } catch (InterruptedException e){
+
+                }
+                Platform.runLater(() -> {
+                    popup.hide();
+                });
             }
-            popup.hide();
+        };
+        timer.start();
+        
+    }
+
+    public void addNotification(String login){
+        final Popup popup = new Popup();
+        popup.setX(addFriendButton.getScene().getWindow().getWidth()/2 + 400);
+        popup.setY(addFriendButton.getScene().getWindow().getHeight()/2 + 100);
+        Label inviteLabel = new Label(login + " invites!");
+        Rectangle plane = new Rectangle(160, 80, Color.WHITE);
+        Button accept = new Button("Accept");
+        Button deny = new Button("Deny");
+        VBox buttons = new VBox(accept, deny);
+        buttons.setAlignment(Pos.CENTER);
+        buttons.setSpacing(10);
+        plane.setStroke(Color.BLACK);
+        HBox info = new HBox(inviteLabel, buttons);
+        info.setAlignment(Pos.CENTER);
+        info.setSpacing(10);
+        StackPane stackPane = new StackPane(plane, info);
+        popup.getContent().addAll(stackPane);
+        popup.show(addChat.getScene().getWindow());
+        
+        EventHandler<MouseEvent> addAccept = new EventHandler<MouseEvent>() {
+            
+            @Override
+            public void handle(MouseEvent event){
+                DataController.getDataController().reqInvAnswer(login, true);
+                popup.hide();
+            }
+        };
+
+        EventHandler<MouseEvent> denied = new EventHandler<MouseEvent>() {
+            
+            @Override
+            public void handle(MouseEvent event){
+                DataController.getDataController().reqInvAnswer(login, false);
+                popup.hide();
+            }
+        };
+
+        accept.setOnMouseClicked(addAccept);
+        deny.setOnMouseClicked(denied);
+    }
+
+    public void emergencyExit(){
+        final Popup popup = new Popup();
+        popup.setX(addFriendButton.getScene().getWindow().getWidth()/2 + 400);
+        popup.setY(addFriendButton.getScene().getWindow().getHeight()/2 + 100);
+        Label issueLabel = new Label("Connection problem logging out!");
+        Rectangle plane = new Rectangle(160, 80, Color.WHITE);
+        plane.setStroke(Color.BLACK);
+        StackPane stackPane = new StackPane(plane, issueLabel);
+        popup.getContent().addAll(stackPane);
+        popup.show(addChat.getScene().getWindow());
+        try{
+            wait(2000);
+        } catch (InterruptedException e){
+            Logger.getLogger().logError("Error while waiting for 2 s after emergencyExit");
+        }
+        popup.hide();
         try{
             handleLogout();
         } catch (IOException e) {

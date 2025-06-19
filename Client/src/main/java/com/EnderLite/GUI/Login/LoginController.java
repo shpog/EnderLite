@@ -56,11 +56,13 @@ public class LoginController{
     @FXML
     private Label privacyPolicyLabel;
 
+    private boolean connectionEstablished = false;
 
     @FXML
     public void initialize(){
         badPassw.setVisible(false);
         badLoginEmail.setVisible(false);
+        
 
         EventHandler<MouseEvent> logIn = new EventHandler<MouseEvent>(){
 
@@ -70,6 +72,15 @@ public class LoginController{
                     DataController dataController = DataController.getDataController();
                     ResponseStatus status = null;
                     try{
+                        if ( connectionEstablished ==false &&
+                            dataController.establishConnection("localhost", 12345) == false){
+                             badLoginEmail.setText("Serwer nie odpowiada!");
+                            badLoginEmail.setVisible(true);
+                            return;
+                        } else {
+                            connectionEstablished = true;
+                        }
+                        
                         status = waithForAuth(dataController);
                     } catch (InterruptedException e){
                         Logger.getLogger().logError("Interrupt exception login (waitForAuth)");

@@ -61,6 +61,7 @@ public final class  ConnectionController {
             Logger.getLogger().logInfo("Connected to server. Starting handshake...");
         } catch (IOException e){
             Logger.getLogger().logError("Server not found! (ConnectionController)");
+            return false;
         }
 
         //check if server responds

@@ -9,6 +9,7 @@ public enum ResponseType {
     DEL_CMD,
     DEL_ANS,
     CHAT_CREATE,
+    CHAT_ADD_CMD,
     CHAT_ADD_USER,
     CHAT_DEL_USER,
     CHAT_RANK_CHANGE,

@@ -73,8 +73,10 @@ public class Transmitter extends Thread {
                 outStream.write(encryptedMessage);
             } catch (IOException e) {
                 Logger.getLogger().logError("Error while sending message (Transmitter)");
+                break;
             }
         }
+        Logger.getLogger().logInfo("Transmitter shutdown!");
     }
 
     private void initCipher(){

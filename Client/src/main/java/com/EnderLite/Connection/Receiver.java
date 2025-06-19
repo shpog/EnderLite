@@ -63,6 +63,7 @@ public class Receiver extends Thread{
         responseMap.put("ANS_SEND_DATA-", new Pair<>(ResponseType.MESSAGE_ANS, new MessageDisassembler()) );
         responseMap.put("CMD_WRITE_DATA-", new Pair<>(ResponseType.MESSAGE_CMD, new CmdMessageDisassembler()) );
         responseMap.put("ANS_CONN_END-", new Pair<>(ResponseType.DISCONNECT, new StatusDisassembler()) );
+        responseMap.put("CMD_ADD_CHAT-", new Pair<>(ResponseType.CHAT_ADD_CMD, new InviteDisassembler()) );
     }
 
     public void setDataQueue(ConcurrentLinkedQueue< Pair<ResponseType, Message> > queue){
@@ -108,8 +109,10 @@ public class Receiver extends Thread{
             }
 
             String message = new String(decryptedMessage);
+            System.out.println("Commant reveiced: " + message);
             fillResponse(message);
         }
+        Logger.getLogger().logInfo("Receiver shutdown!");
     }
 
     private void initCipher(){
@@ -140,12 +143,13 @@ public class Receiver extends Thread{
             ResponseType response = messageType.getKey();
             //if CMD create new Message and insert
             if (response.equals(ResponseType.CMD_CHAT_DESTROY) || response.equals(ResponseType.CMD_CHAT_NAME_CHANGE)
-                || response.equals(ResponseType.DEL_CMD) || response.equals(ResponseType.INV_CMD) || response.equals(ResponseType.MESSAGE_CMD)){
+                || response.equals(ResponseType.DEL_CMD) || response.equals(ResponseType.INV_CMD) || response.equals(ResponseType.MESSAGE_CMD)
+                || response.equals(ResponseType.CHAT_ADD_CMD)){
 
                 Message mesg = new Message(null, null, null, null, null, null);
                 messageType.getValue().dissasembly(args, mesg);
                 pendingMessages.add(new Pair<ResponseType,Message>(response, mesg));
-                
+                System.out.println("CMD!");
             } else { //else respond to sent request
                 Iterator<Pair<ResponseType, Message> > iter = pendingMessages.iterator();
                 while (iter.hasNext()) {

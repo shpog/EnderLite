@@ -106,9 +106,10 @@ public class DataController {
     public void closeConnection(){
         transmitter.interrupt();
         receiver.interrupt();
-        taskExecutor.interrupt();
+        taskExecutor.shutdown();
         try{
             connectionController.closeStreams();
+            
         } catch (IOException e){
             Logger.getLogger().logError("Error while closing streams (DataCOntroller)");
         }
@@ -127,6 +128,10 @@ public class DataController {
 
     public ChatData getActiveChat(){
         return activeChat;
+    }
+
+    public void EmergencyExit(){
+        mainViewController.emergencyExit();
     }
 
     //Request
@@ -363,11 +368,11 @@ public class DataController {
     }
 
     void sendNotification(String text, boolean time){
-
+        mainViewController.notification(text, time);
     }
 
     void sendInviteNotification(String login){
-
+        mainViewController.addNotification(login);
     }
 
     //Used to retrive data or update userData
