@@ -26,7 +26,7 @@ public class Controller {
                 continue;
 
             try {
-                clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey).getBytes());
+                clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -38,7 +38,7 @@ public class Controller {
         for (ClientHandler clientHandler : handlers) {
             if (clientHandler.ctrl.user.ID == uuid) {
                 try {
-                    clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey).getBytes());
+                    clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -54,12 +54,14 @@ public class Controller {
                 isAuth = true;
                 return "AUTH_RESP-" + user.Login + "-" + user.Email;
             }
-            return "AUTH_RESP-DENIED";
+            return "AUTH_RESP-DENIED-";
 
-        } catch (Error e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            // e.printStackTrace();
+            return "AUTH_RESP-DENIED-";
+
         }
-        return "AUTH_RESP-DENIED";
+        // return "AUTH_RESP-DENIED";
     }
 
     public String AUTH_EMAIL(String email, String password) {
@@ -69,26 +71,26 @@ public class Controller {
                 isAuth = true;
                 return "AUTH_RESP-" + user.Login + "-" + user.Email;
             }
-            return "AUTH_RESP-DENIED";
+            System.out.println("User not found");
+            return "AUTH_RESP-DENIED-";
 
-        } catch (Error e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            return "AUTH_RESP-DENIED-";
         }
-        return "AUTH_RESP-DENIED";
     }
 
     public String AUTH_STATUS() {
         if (isAuth) {
             return "AUTH_RESP-login-email";
         }
-        return "AUTH-RESPONSE_DENIED";
+        return "AUTH-RESPONSE_DENIED-";
     }
 
     public String REQ_ADD_USER(String login, String email, String password) {
         try {
             user = model.findUser(email);
             if (user != null)
-                if (user.Login == login)
+                if (user.Login.equals(login))
                     return "ANS_ADD_USER-DENIED-LOGIN";
                 else
                     return "ANS_ADD_USER-DENIED-EMAIL";
@@ -99,9 +101,9 @@ public class Controller {
             user.Email = email;
             user.PasswordHash = password;
             model.modifyOrCreateUser(user);
-            return "ANS_ADD_USER-" + login + "-" + "email";
+            return "ANS_ADD_USER-" + login + "-" + email;
 
-        } catch (Error e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "ANS_ADD_USER-ERROR";
         }
@@ -117,13 +119,13 @@ public class Controller {
                 return "ANS_USER_DATA-DENIED-ERROR";
 
             String userData = "L=" + requestedLogin
-                    + "-E=" + u.Email + "-F={";
+                    + "-E=" + u.Email + "-F=";
 
             for (UUID uuid : u.FriendsList) {
                 userData += model.getUser(uuid).Login + ",";
             }
 
-            userData += "}-C={";
+            userData += "-C=";
 
             for (UUID uuid : u.ChatsList) {
                 Chat chat = model.getChat(uuid);
@@ -136,10 +138,10 @@ public class Controller {
                 userData += ",";
             }
 
-            userData += "}-END";
+            userData += "-END";
             return "ANS_USER_DATA-" + userData;
 
-        } catch (Error e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "ANS_USER_DATA-DENIED-ERROR";
 
@@ -237,7 +239,7 @@ public class Controller {
             model.modifyOrCreateChat(chat);
             return "ANS_CRT_CHAT-ACCEPT";
 
-        } catch (Error e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "ANS_CRT_CHAT-DENIED-ERROR";
         }
@@ -259,7 +261,7 @@ public class Controller {
 
             return "ANS_ADD_CHAT-ACCEPT";
 
-        } catch (Error e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "ANS_ADD_CHAT-DENIED-ERROR";
         }
@@ -278,7 +280,7 @@ public class Controller {
 
             return "ANS_CHAN_CHAT_NAME-ACCEPT";
 
-        } catch (Error e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "ANS_CHAN_CHAT_NAME-ERROR";
         }
@@ -294,14 +296,14 @@ public class Controller {
                 return "ANS_CHAN_CHAT_RANK-DENIED-NOACCESS";
 
             User changedUser = model.findUser(changedLogin);
-            if (rank == "ADMIN")
+            if (rank.equals("ADMIN"))
                 chat.Admins.add(changedUser.ID);
             else if (chat.Admins.contains(changedUser.ID))
                 chat.Admins.removeIf(n -> n == changedUser.ID);
 
             return "ANS_CHAN_CHAT_RANK-ACCEPT";
 
-        } catch (Error e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "ANS_CHAN_CHAT_RANK-DENIED-ERROR";
         }
@@ -323,7 +325,7 @@ public class Controller {
 
             return "ANS_DEL_CHAT-ACCEPT";
 
-        } catch (Error e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "ANS_DEL_CHAT-DENIED-ERROR";
 
@@ -343,7 +345,7 @@ public class Controller {
 
             return "ANS_DES_CHAT-ACCEPT";
 
-        } catch (Error e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "ANS_DES_CHAT-DENIED-ERROR";
         }

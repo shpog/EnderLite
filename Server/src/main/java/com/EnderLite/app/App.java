@@ -15,24 +15,11 @@ public class App {
 
         // Here space for testing purpouses
 
-        // Model model = new Model();
-        // UUID uuid = UUID.fromString("f7c3de3d-1fea-4d7c-a8b0-29f63c4c3454");
-
-        // User user0 = model.getUser(uuid);
-        // System.out.println(user0.Login + " " + user0.Email + " " + user0.PasswordHash
-        // + " " + user0.ID.toString());
-
-        // User user = new User();
-        // user.ID = uuid;
-        // user.Login = "shaman";
-        // user.Email = "sh@mn.xd";
-        // user.PasswordHash = "efweghojdwoij";
-
-        // model.modifyOrCreateUser(user);
-        // User user2 = model.getUser(uuid);
-        // System.out.println(user2.Login + ", " + user2.Email + ", " +
-        // user2.PasswordHash
-        // + ", " + user2.ID.toString());
+        try {
+            Model model = new Model();
+            model.removeAllUsers();
+        } catch (Exception e) {
+        }
 
         // Space for testing purpouses ends
 

@@ -5,15 +5,20 @@ import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 public class DataEncryptor {
 
-    public static String encrypt(String input, SecretKey key) throws NoSuchPaddingException, NoSuchAlgorithmException,
+    {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+
+    public static byte[] encrypt(String input, SecretKey key) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException, NoSuchProviderException {
         Cipher cipher = Cipher.getInstance("AES", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, key);
-        byte[] cipherText = cipher.doFinal(input.getBytes());
-        return new String(cipherText);
+        return cipher.doFinal(input.getBytes());
     }
 
     public static String decrypt(byte[] cipherText, SecretKey key)

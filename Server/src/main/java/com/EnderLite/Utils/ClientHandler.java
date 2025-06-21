@@ -354,8 +354,8 @@ public class ClientHandler implements Runnable {
                 else if (line.equals("REQ_CONN_END")) {
                     response = "ANS_CONN_END";
                     try {
-                        sendBytes(DataEncryptor.encrypt(response, secretKey).getBytes()); // Send response before
-                                                                                          // breaking
+                        sendBytes(DataEncryptor.encrypt(response, secretKey)); // Send response before
+                                                                               // breaking
                         System.out.println("Client " + clientSocket.getInetAddress() + " requested disconnect");
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -366,7 +366,8 @@ public class ClientHandler implements Runnable {
 
                 if (response != "") {
                     try {
-                        sendBytes(DataEncryptor.encrypt(response, secretKey).getBytes());
+                        System.out.println("Message sent: " + response);
+                        sendBytes(DataEncryptor.encrypt(response, secretKey));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

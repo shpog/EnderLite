@@ -56,10 +56,12 @@ public class Model {
             Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
             String[] allUsers = prefs.keys();
             for (String uuid : allUsers) {
-                JSONObject jsonObject = new JSONObject(uuid);
-                if (jsonObject.getString("login") == key || jsonObject.getString("email") == key) {
-                    return getUser(prefs.get(uuid,
-                            "{\"login\":\"none\",\"email\":\"none\",\"passwordHash\":\"none\"}"));
+
+                JSONObject jsonObject = new JSONObject(prefs.get(uuid,
+                        "{\"login\":\"none\",\"email\":\"none\",\"passwordHash\":\"none\"}"));
+                // TODO .equals()
+                if (jsonObject.getString("login").equals(key) || jsonObject.getString("email").equals(key)) {
+                    return getUser(uuid);
                 }
             }
             prefs.sync();
@@ -94,9 +96,11 @@ public class Model {
         prefs.put(user.ID.toString(), jsonObject.toString());
         try {
             prefs.sync();
+            prefs.flush();
         } catch (BackingStoreException e) {
             e.printStackTrace();
         }
+
         return user;
     }
 
@@ -170,7 +174,7 @@ public class Model {
             String[] allChats = prefs.keys();
             for (String uuid : allChats) {
                 JSONObject jsonObject = new JSONObject(uuid);
-                if (jsonObject.getString("name") == key) {
+                if (jsonObject.getString("name").equals(key)) {
                     return getChat(prefs.get(uuid,
                             "{\"name\":\"none\"}"));
                 }
@@ -215,9 +219,25 @@ public class Model {
         return chat;
     }
 
-    public void removeChat(UUID uuid) {
+    public void removeChat(UUID uuid) throws BackingStoreException {
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
         prefs.remove(uuid.toString());
+
+    }
+
+    public void removeUser(UUID uuid) throws BackingStoreException {
+        Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
+        prefs.remove(uuid.toString());
+
+    }
+
+    public void removeAllUsers() throws BackingStoreException {
+        Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
+
+        for (String key : prefs.keys()) {
+            prefs.remove(key);
+        }
+
     }
 
 }
