@@ -2,3 +2,7 @@
 .vscode/
 Server/target/
 Client/target/
+Client/log.txt
+TestUtils/DummyServer/target/
+TestUtils/DummyServer/.mvn/
+TestUtils/DummyServer/.vscode/
