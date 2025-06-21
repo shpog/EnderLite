@@ -155,7 +155,14 @@ public class ClientHandler implements Runnable {
                     System.out.println("Client " + clientSocket.getInetAddress() + " disconnected");
                     break;
                 }
-                line = new String(receivedBytes);
+
+                try {
+                    line = DataEncryptor.decrypt(receivedBytes, secretKey);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    line = "";
+                }
+
                 System.out.println(clientSocket.getInetAddress() + "$ " + line);
 
                 if (line.startsWith("AUTH_LOG&PASSW-")) {
@@ -346,13 +353,25 @@ public class ClientHandler implements Runnable {
 
                 else if (line.equals("REQ_CONN_END")) {
                     response = "ANS_CONN_END";
-                    sendBytes(response.getBytes()); // Send response before breaking
-                    System.out.println("Client " + clientSocket.getInetAddress() + " requested disconnect");
+                    try {
+                        sendBytes(DataEncryptor.encrypt(response, secretKey).getBytes()); // Send response before
+                                                                                          // breaking
+                        System.out.println("Client " + clientSocket.getInetAddress() + " requested disconnect");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                     break;
                 }
 
-                if (response != "")
-                    sendBytes(response.getBytes());
+                if (response != "") {
+                    try {
+                        sendBytes(DataEncryptor.encrypt(response, secretKey).getBytes());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -25,14 +25,23 @@ public class Controller {
             if (clientHandler.ctrl.user == user)
                 continue;
 
-            clientHandler.sendBytes(cmd.getBytes());
+            try {
+                clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey).getBytes());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
     public void CMD(String cmd, UUID uuid) {
         for (ClientHandler clientHandler : handlers) {
             if (clientHandler.ctrl.user.ID == uuid) {
-                clientHandler.sendBytes(cmd.getBytes());
+                try {
+                    clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey).getBytes());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 return;
             }
         }

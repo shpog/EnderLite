@@ -48,7 +48,7 @@ public class App {
             while (true) {
                 Socket client = server.accept();
 
-                System.out.println("New client connected"
+                System.out.println("New client connected "
                         + client.getInetAddress()
                                 .getHostAddress());
                 // ClientHandler clientSock = new ClientHandler(client);
