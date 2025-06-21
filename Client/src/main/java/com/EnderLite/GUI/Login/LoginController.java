@@ -108,6 +108,8 @@ public class LoginController{
                         badLoginEmail.setText("Błędne dane!");
                         badLoginEmail.setVisible(true);
                     }
+                    dataController.closeConnection();
+                    connectionEstablished = false;
                 }
             }
         };

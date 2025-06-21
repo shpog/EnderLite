@@ -81,6 +81,8 @@ public class AccountCreatorController {
                     } catch (IOException e) {
                         Logger.getLogger().logError("Error while switching from AccountCreator to MainView");
                     }
+                    dataController.closeConnection();
+                    connectionEstablished = false;
                 }
             }
         };
