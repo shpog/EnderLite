@@ -29,7 +29,7 @@ import javax.crypto.SecretKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class ClientHandler implements Runnable {
-    private Controller ctrl;
+    public Controller ctrl;
     private final Socket clientSocket;
 
     private DataOutputStream out;

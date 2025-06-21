@@ -20,6 +20,24 @@ public class Controller {
         handlers = handlerList;
     }
 
+    public void CMD(String cmd) {
+        for (ClientHandler clientHandler : handlers) {
+            if (clientHandler.ctrl.user == user)
+                continue;
+
+            clientHandler.sendBytes(cmd.getBytes());
+        }
+    }
+
+    public void CMD(String cmd, UUID uuid) {
+        for (ClientHandler clientHandler : handlers) {
+            if (clientHandler.ctrl.user.ID == uuid) {
+                clientHandler.sendBytes(cmd.getBytes());
+                return;
+            }
+        }
+    }
+
     public String AUTH_LOG(String login, String password) {
         try {
             user = model.findUser(login);
@@ -217,8 +235,6 @@ public class Controller {
     }
 
     public String REQ_ADD_CHAT(String chatName, String sendingLogin, String[] usersToAdd) {
-
-        // TODO CMD_ADD_CHAT
         try {
             Chat chat = model.findChat(chatName);
             User sendingUser = model.findUser(sendingLogin);
@@ -227,7 +243,9 @@ public class Controller {
                 return "ANS_ADD_CHAT-DENIED-NOACCESS";
 
             for (String userLogin : usersToAdd) {
-                chat.Members.add(model.findUser(userLogin).ID);
+                User u = model.findUser(userLogin);
+                chat.Members.add(u.ID);
+                CMD("CMD_ADD_CHAT-" + chatName, u.ID);
             }
 
             return "ANS_ADD_CHAT-ACCEPT";
@@ -239,8 +257,6 @@ public class Controller {
     }
 
     public String REQ_CHAN_CHAT_NAME(String login, String oldChatName, String newChatName) {
-
-        // TODO CMD_CHAN_CHAT_NAME-(stara_nazwa_czatu)-(nowa_nazwa_czatu)
         try {
             Chat chat = model.findChat(oldChatName);
             User sendingUser = model.findUser(login);
@@ -249,6 +265,7 @@ public class Controller {
                 return "ANS_CHAN_CHAT_NAME-NOACCESS";
 
             chat.Name = newChatName;
+            CMD("CMD_CHAN_CHAT_NAME-" + oldChatName + "-" + newChatName);
 
             return "ANS_CHAN_CHAT_NAME-ACCEPT";
 
@@ -305,8 +322,6 @@ public class Controller {
     }
 
     public String REQ_DES_CHAT(String login, String chatName) {
-
-        // TODO CMD_DES_CHAT-(nazwa chatu)
         try {
             Chat chat = model.findChat(chatName);
             User sendingUser = model.findUser(login);
@@ -315,6 +330,7 @@ public class Controller {
                 return "ANS_DES_CHAT-DENIED-NOACCESS";
 
             model.removeChat(chat.ID);
+            CMD("CMD_DES_CHAT-" + chatName);
 
             return "ANS_DES_CHAT-ACCEPT";
 
