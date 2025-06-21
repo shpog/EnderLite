@@ -10,4 +10,10 @@ public class Chat {
     public ArrayList<UUID> Admins;
 
     public ArrayList<MessageEntry> History;
+
+    public Chat() {
+        Admins = new ArrayList<UUID>();
+        Members = new ArrayList<UUID>();
+        History = new ArrayList<MessageEntry>();
+    }
 }

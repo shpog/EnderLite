@@ -3,6 +3,9 @@ package com.EnderLite.Controller;
 import java.lang.reflect.Modifier;
 
 import com.EnderLite.Model.*;
+import com.EnderLite.Utils.*;
+
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class Controller {
@@ -10,9 +13,38 @@ public class Controller {
     public Boolean isAuth = false;
     public Model model;
     public User user;
+    public ArrayList<ClientHandler> handlers;
 
-    public Controller() {
+    public Controller(ArrayList<ClientHandler> handlerList) {
         model = new Model();
+        handlers = handlerList;
+    }
+
+    public void CMD(String cmd) {
+        for (ClientHandler clientHandler : handlers) {
+            if (clientHandler.ctrl.user == user)
+                continue;
+
+            try {
+                clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey).getBytes());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    public void CMD(String cmd, UUID uuid) {
+        for (ClientHandler clientHandler : handlers) {
+            if (clientHandler.ctrl.user.ID == uuid) {
+                try {
+                    clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey).getBytes());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return;
+            }
+        }
     }
 
     public String AUTH_LOG(String login, String password) {
@@ -62,6 +94,7 @@ public class Controller {
                     return "ANS_ADD_USER-DENIED-EMAIL";
 
             user = new User();
+            user.ID = UUID.randomUUID();
             user.Login = login;
             user.Email = email;
             user.PasswordHash = password;
@@ -91,11 +124,16 @@ public class Controller {
             }
 
             userData += "}-C={";
-            // userData += "}-C={" + "chatA-USER,chatB-ADMIN";
-            // TODO
 
             for (UUID uuid : u.ChatsList) {
-                userData += model.getChat(uuid).Name + ",";
+                Chat chat = model.getChat(uuid);
+                userData += chat.Name + "-";
+
+                if (chat.Admins.contains(u.ID))
+                    userData += "ADMIN";
+                else
+                    userData += "USER";
+                userData += ",";
             }
 
             userData += "}-END";
@@ -139,12 +177,21 @@ public class Controller {
 
     public void REQ_INV_LOG(String userToInvite, String invitingUser) {
         // if (!isAuth)
+        // return;
+        // CMD_INV_LOG(userToInvite, invitingUser);
+
         // return "ANS_USER_DATA-DENIED-NOACCESS";
         // TODO: Implement logic to send CMD_INV_LOG to userToInvite
         // This requires knowledge of other connected clients.
         // response = "Server processed invitation request for " + userToInvite + " from
         // " + invitingUser; // Client receives no direct ACK here
         // CMD_INV_LOG-(login_zapraszającego)
+    }
+
+    public synchronized void CMD_INV_LOG(String userToInvite, String invitingUser) {
+        // for (ClientHandler handler : handlers) {
+
+        // }
     }
 
     public void REQ_INV_EMAIL(String emailToInvite, String invitingUser) {
@@ -161,21 +208,10 @@ public class Controller {
         // This requires knowledge of other connected clients.
         // response = "Server processed invitation request for " + userToInvite + " from
         // " + invitingUser; // Client receives no direct ACK here
-        // CMD_INV_LOG-(login_zapraszającego)
+        // CMD_DEL_LOG-(login_zapraszającego)
     }
 
-    // /* DODAć to */
-    // public void CMD_DEL_LOG(String userToInvite, String invitingUser) {
-    // // TODO: Implement logic to send CMD_INV_LOG to userToInvite
-    // // This requires knowledge of other connected clients.
-    // // response = "Server processed invitation request for " + userToInvite + "
-    // from
-    // // " + invitingUser; // Client receives no direct ACK here
-    // // CMD_INV_LOG-(login_zapraszającego)
-    // }
-
     public String REQ_INV_STATUS(String invitingUser, String invitedUser, String status) {
-        // TODO: Update friend status in database
         if ("ACCEPTED".equals(status)) {
             // TODO: Add to friends list in database
             return "ANS_INV_LOG-ACCEPT-" + invitedUser;
@@ -186,93 +222,131 @@ public class Controller {
         return "ANS_INV_LOG-DENIED-" + invitedUser;
     }
 
-    public String REQ_CRT_CHAT(String login, String chatname) {
-        // TODO: Check if chatName is already used
-        boolean chatNameUsed = false; // Replace with actual check
-        if (chatNameUsed) {
-            return "ANS_CRT_CHAT-DENIED-USED";
-        }
-        // TODO: Create chat in database, set login as admin
-        boolean creationSuccess = true; // Replace with actual creation logic
-        if (creationSuccess) {
-            return "ANS_CRT_CHAT-ACCEPT";
-        }
+    public String REQ_CRT_CHAT(String login, String chatName) {
 
-        return "ANS_CRT_CHAT-DENIED-ERROR";
+        try {
+            Chat chat = model.findChat(chatName);
+            if (chat != null)
+                return "ANS_CRT_CHAT-DENIED-USED";
+
+            chat = new Chat();
+            chat.ID = UUID.randomUUID();
+            chat.Name = chatName;
+            chat.Admins.add(model.findUser(login).ID);
+
+            model.modifyOrCreateChat(chat);
+            return "ANS_CRT_CHAT-ACCEPT";
+
+        } catch (Error e) {
+            e.printStackTrace();
+            return "ANS_CRT_CHAT-DENIED-ERROR";
+        }
     }
 
     public String REQ_ADD_CHAT(String chatName, String sendingLogin, String[] usersToAdd) {
-        // TODO: Check if sendingLogin has admin privileges for chatName
-        boolean isAdmin = true; // Replace with actual check
-        if (isAdmin) {
-            // TODO: Add usersToAdd to the chat as regular users in database
-            boolean addSuccess = true; // Replace with actual logic
-            if (addSuccess) {
-                return "ANS_ADD_CHAT-ACCEPT";
+        try {
+            Chat chat = model.findChat(chatName);
+            User sendingUser = model.findUser(sendingLogin);
+
+            if (!chat.Admins.contains(sendingUser.ID))
+                return "ANS_ADD_CHAT-DENIED-NOACCESS";
+
+            for (String userLogin : usersToAdd) {
+                User u = model.findUser(userLogin);
+                chat.Members.add(u.ID);
+                CMD("CMD_ADD_CHAT-" + chatName, u.ID);
             }
+
+            return "ANS_ADD_CHAT-ACCEPT";
+
+        } catch (Error e) {
+            e.printStackTrace();
             return "ANS_ADD_CHAT-DENIED-ERROR";
         }
-        return "ANS_ADD_CHAT-DENIED-NOACCESS";
     }
 
     public String REQ_CHAN_CHAT_NAME(String login, String oldChatName, String newChatName) {
-        // TODO: Check if login has admin privileges for oldChatName
-        boolean isAdmin = true; // Replace with actual check
-        if (isAdmin) {
-            // TODO: Change chat name in database and notify other clients
-            // (CMD_CHAN_CHAT_NAME)
-            boolean nameChangeSuccess = true; // Replace with actual logic
-            if (nameChangeSuccess) {
-                // TODO: Send CMD_CHAN_CHAT_NAME to other clients in the chat
-                return "ANS_CHAN_CHAT_NAME-ACCEPT";
-            }
+        try {
+            Chat chat = model.findChat(oldChatName);
+            User sendingUser = model.findUser(login);
+
+            if (!chat.Admins.contains(sendingUser.ID))
+                return "ANS_CHAN_CHAT_NAME-NOACCESS";
+
+            chat.Name = newChatName;
+            CMD("CMD_CHAN_CHAT_NAME-" + oldChatName + "-" + newChatName);
+
+            return "ANS_CHAN_CHAT_NAME-ACCEPT";
+
+        } catch (Error e) {
+            e.printStackTrace();
             return "ANS_CHAN_CHAT_NAME-ERROR";
         }
-
-        return "ANS_CHAN_CHAT_NAME-NOACCESS";
     }
 
     public String REQ_CHAN_CHAT_RANK(String chatName, String requestingLogin, String changedLogin, String rank) {
-        // TODO: Check if requestingLogin has admin privileges for chatName
-        boolean isAdmin = true; // Replace with actual check
-        if (isAdmin) {
-            // TODO: Change rank of changedLogin in chatName in database
-            boolean rankChangeSuccess = true; // Replace with actual logic
-            if (rankChangeSuccess) {
-                return "ANS_CHAN_CHAT_RANK-ACCEPT";
-            }
+
+        try {
+            Chat chat = model.findChat(chatName);
+            User sendingUser = model.findUser(requestingLogin);
+
+            if (!chat.Admins.contains(sendingUser.ID))
+                return "ANS_CHAN_CHAT_RANK-DENIED-NOACCESS";
+
+            User changedUser = model.findUser(changedLogin);
+            if (rank == "ADMIN")
+                chat.Admins.add(changedUser.ID);
+            else if (chat.Admins.contains(changedUser.ID))
+                chat.Admins.removeIf(n -> n == changedUser.ID);
+
+            return "ANS_CHAN_CHAT_RANK-ACCEPT";
+
+        } catch (Error e) {
+            e.printStackTrace();
             return "ANS_CHAN_CHAT_RANK-DENIED-ERROR";
         }
-        return "ANS_CHAN_CHAT_RANK-DENIED-NOACCESS";
     }
 
     public String REQ_DEL_CHAT(String chatName, String sendingLogin, String[] usersToRemove) {
-        // TODO: Check if sendingLogin has admin privileges for chatName
-        boolean isAdmin = true; // Replace with actual check
-        if (isAdmin) {
-            // TODO: Remove usersToRemove from the chat in database
-            boolean removeSuccess = true; // Replace with actual logic
-            if (removeSuccess) {
-                return "ANS_DEL_CHAT-ACCEPT";
+        try {
+            Chat chat = model.findChat(chatName);
+            User sendingUser = model.findUser(sendingLogin);
+
+            if (!chat.Admins.contains(sendingUser.ID))
+                return "ANS_DEL_CHAT-DENIED-NOACCESS";
+
+            for (String loginToRemove : usersToRemove) {
+                User userToRemove = model.findUser(loginToRemove);
+                if (chat.Members.contains(userToRemove.ID))
+                    chat.Members.removeIf(n -> n == userToRemove.ID);
             }
+
+            return "ANS_DEL_CHAT-ACCEPT";
+
+        } catch (Error e) {
+            e.printStackTrace();
             return "ANS_DEL_CHAT-DENIED-ERROR";
+
         }
-        return "ANS_DEL_CHAT-DENIED-NOACCESS";
     }
 
     public String REQ_DES_CHAT(String login, String chatName) {
-        // TODO: Check if login has admin privileges for chatName
-        boolean isAdmin = true; // Replace with actual check
-        if (isAdmin) {
-            // TODO: Delete chat from database and notify other clients (CMD_DES_CHAT)
-            boolean deleteSuccess = true; // Replace with actual logic
-            if (deleteSuccess) {
-                // TODO: Send CMD_DES_CHAT to all clients in the chat
-                return "ANS_DES_CHAT-ACCEPT";
-            }
+        try {
+            Chat chat = model.findChat(chatName);
+            User sendingUser = model.findUser(login);
+
+            if (!chat.Admins.contains(sendingUser.ID))
+                return "ANS_DES_CHAT-DENIED-NOACCESS";
+
+            model.removeChat(chat.ID);
+            CMD("CMD_DES_CHAT-" + chatName);
+
+            return "ANS_DES_CHAT-ACCEPT";
+
+        } catch (Error e) {
+            e.printStackTrace();
             return "ANS_DES_CHAT-DENIED-ERROR";
         }
-        return "ANS_DES_CHAT-DENIED-NOACCESS";
     }
 
     public String SEND_DATA(String login, String chatName, String data) {
@@ -282,10 +356,9 @@ public class Controller {
         boolean sendSuccess = true; // Replace with actual logic
         if (sendSuccess) {
             long timestamp = System.currentTimeMillis();
-            // TODO: Send CMD_WRITE_DATA to other clients in the chat (excluding the sender)
             return "ANS_SEND_DATA-ACCEPT-" + timestamp;
         }
-        // TODO: Determine specific reason for denial (e.g., chat doesn't exist)
+
         boolean badChatName = false; // Replace with actual check
         if (badChatName) {
             return "ANS_SEND_DATA-DENIED-NAME";
@@ -294,7 +367,7 @@ public class Controller {
     }
 
     // public String GET_DATA(String login, String chatName, String commandType) {
-    // // TODO: Implement logic to retrieve messages from database for chatName
+    // // TOO: Implement logic to retrieve messages from database for chatName
     // // Differentiate based on commandType (CON for continuation, NEW for reset)
     // // Retrieve max 20 messages, newest first for GET_DATA_NEW, and then older
     // for
@@ -314,7 +387,7 @@ public class Controller {
     // dataToSend.append(msg);
     // }
 
-    // // TODO: Update server-side message index for this client and chat
+    // // TDO: Update server-side message index for this client and chat
     // return "ANS_GET_DATA-" + chatName + "-" + dataToSend.toString();
     // }
     // return "ANS_GET_DATA-END";
@@ -323,12 +396,12 @@ public class Controller {
     // }
 
     // public String SEND_FILE(String login, String chatName, String fileData) {
-    // // TODO: Handle file data (e.g., save to a temp location, store metadata in
+    // // TDO: Handle file data (e.g., save to a temp location, store metadata in
     // DB)
     // // Send CMD_WRITE_FILE to other clients in chat
     // boolean sendSuccess = true; // Replace with actual logic
     // if (sendSuccess) {
-    // // TODO: Send CMD_WRITE_FILE to other clients in the chat (excluding the
+    // // TOO: Send CMD_WRITE_FILE to other clients in the chat (excluding the
     // sender)
     // return "ANS_SEND_FILE-ACCEPT";
     // }

@@ -3,6 +3,7 @@ package com.EnderLite.app;
 import com.EnderLite.Model.*;
 import com.EnderLite.Utils.*;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import java.io.*;
@@ -43,13 +44,17 @@ public class App {
             System.out.println("Server is running on " + String.valueOf(server.getInetAddress()) + ":"
                     + String.valueOf(server.getLocalPort()));
 
+            ArrayList<ClientHandler> clients = new ArrayList<ClientHandler>();
             while (true) {
                 Socket client = server.accept();
-                System.out.println("New client connected"
+
+                System.out.println("New client connected "
                         + client.getInetAddress()
                                 .getHostAddress());
                 // ClientHandler clientSock = new ClientHandler(client);
-                new Thread(new ClientHandler(client)).start();
+                ClientHandler handler = new ClientHandler(client, clients);
+                clients.add(handler);
+                new Thread(handler).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
