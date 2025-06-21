@@ -331,10 +331,9 @@ public class Controller {
         boolean sendSuccess = true; // Replace with actual logic
         if (sendSuccess) {
             long timestamp = System.currentTimeMillis();
-            // TODO: Send CMD_WRITE_DATA to other clients in the chat (excluding the sender)
             return "ANS_SEND_DATA-ACCEPT-" + timestamp;
         }
-        // TODO: Determine specific reason for denial (e.g., chat doesn't exist)
+
         boolean badChatName = false; // Replace with actual check
         if (badChatName) {
             return "ANS_SEND_DATA-DENIED-NAME";
@@ -343,7 +342,7 @@ public class Controller {
     }
 
     // public String GET_DATA(String login, String chatName, String commandType) {
-    // // TODO: Implement logic to retrieve messages from database for chatName
+    // // TOO: Implement logic to retrieve messages from database for chatName
     // // Differentiate based on commandType (CON for continuation, NEW for reset)
     // // Retrieve max 20 messages, newest first for GET_DATA_NEW, and then older
     // for
@@ -363,7 +362,7 @@ public class Controller {
     // dataToSend.append(msg);
     // }
 
-    // // TODO: Update server-side message index for this client and chat
+    // // TDO: Update server-side message index for this client and chat
     // return "ANS_GET_DATA-" + chatName + "-" + dataToSend.toString();
     // }
     // return "ANS_GET_DATA-END";
@@ -372,12 +371,12 @@ public class Controller {
     // }
 
     // public String SEND_FILE(String login, String chatName, String fileData) {
-    // // TODO: Handle file data (e.g., save to a temp location, store metadata in
+    // // TDO: Handle file data (e.g., save to a temp location, store metadata in
     // DB)
     // // Send CMD_WRITE_FILE to other clients in chat
     // boolean sendSuccess = true; // Replace with actual logic
     // if (sendSuccess) {
-    // // TODO: Send CMD_WRITE_FILE to other clients in the chat (excluding the
+    // // TOO: Send CMD_WRITE_FILE to other clients in the chat (excluding the
     // sender)
     // return "ANS_SEND_FILE-ACCEPT";
     // }
