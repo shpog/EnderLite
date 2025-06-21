@@ -164,6 +164,25 @@ public class Model {
         return getChat(UUID.fromString(uuid));
     }
 
+    public Chat findChat(String key) {
+        try {
+            Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
+            String[] allChats = prefs.keys();
+            for (String uuid : allChats) {
+                JSONObject jsonObject = new JSONObject(uuid);
+                if (jsonObject.getString("name") == key) {
+                    return getChat(prefs.get(uuid,
+                            "{\"name\":\"none\"}"));
+                }
+            }
+            prefs.sync();
+            return null;
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public Chat modifyOrCreateChat(Chat chat) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", chat.Name);
@@ -194,6 +213,11 @@ public class Model {
             e.printStackTrace();
         }
         return chat;
+    }
+
+    public void removeChat(UUID uuid) {
+        Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
+        prefs.remove(uuid.toString());
     }
 
 }

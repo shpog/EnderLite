@@ -17,6 +17,7 @@ import java.security.PublicKey;
 import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -36,9 +37,12 @@ public class ClientHandler implements Runnable {
 
     public volatile SecretKey secretKey;
 
-    public ClientHandler(Socket socket) {
+    private ArrayList<ClientHandler> handlers;
+
+    public ClientHandler(Socket socket, ArrayList<ClientHandler> clients) {
         clientSocket = socket;
-        ctrl = new Controller();
+        handlers = clients;
+        ctrl = new Controller(handlers);
 
     }
 
