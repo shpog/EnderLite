@@ -74,7 +74,7 @@ public class LoginController{
                     try{
                         if ( connectionEstablished ==false &&
                             dataController.establishConnection("localhost", 12345) == false){
-                             badLoginEmail.setText("Serwer nie odpowiada!");
+                            badLoginEmail.setText("Serwer nie odpowiada!");
                             badLoginEmail.setVisible(true);
                             return;
                         } else {

@@ -55,6 +55,8 @@ public class AccountCreatorController {
     @FXML
     private Button accountCreateButton;
 
+    private boolean connectionEstablished = false;
+
     @FXML
     public void initialize(){
 
@@ -63,7 +65,16 @@ public class AccountCreatorController {
             @Override
             public void handle(MouseEvent event){
                 if (checkData()){
+                    DataController dataController = DataController.getDataController();
                     try{
+                        if ( connectionEstablished ==false &&
+                            dataController.establishConnection("localhost", 12345) == false){
+                            badLoginLabel.setText("Serwer nie odpowiada!");
+                            badLoginLabel.setVisible(true);
+                            return;
+                        } else {
+                            connectionEstablished = true;
+                        }
                         if (requestAccountCreate() ){
                             handleSwitchToMainView();
                         }
