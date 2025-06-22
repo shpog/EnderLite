@@ -17,7 +17,7 @@ import java.security.PublicKey;
 import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
+import java.util.*;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -39,10 +39,13 @@ public class ClientHandler implements Runnable {
 
     private ArrayList<ClientHandler> handlers;
 
+    public List<String> IncomingCMDs;
+
     public ClientHandler(Socket socket, ArrayList<ClientHandler> clients) {
         clientSocket = socket;
         handlers = clients;
         ctrl = new Controller(handlers);
+        IncomingCMDs = Collections.synchronizedList(new ArrayList<String>());
 
     }
 
@@ -150,6 +153,7 @@ public class ClientHandler implements Runnable {
                         .println("Client " + clientSocket.getInetAddress() + " handshake failed. Forcing disconnect.");
 
             while (true) {
+
                 byte[] receivedBytes = readBytes();
                 if (receivedBytes == null || receivedBytes.length == 0) {
                     System.out.println("Client " + clientSocket.getInetAddress() + " disconnected");
@@ -239,7 +243,7 @@ public class ClientHandler implements Runnable {
                         String invitingUser = parts[1];
                         String invitedUser = parts[2];
                         String status = parts[3]; // ACCEPTED or DENIED
-                        response = ctrl.REQ_INV_STATUS(invitingUser, invitedUser, status);
+                        ctrl.REQ_INV_STATUS(invitingUser, invitedUser, status);
                     }
                 }
 
@@ -249,7 +253,7 @@ public class ClientHandler implements Runnable {
                         String userToDelete = parts[1];
                         String deletingUser = parts[2];
 
-                        ctrl.REQ_DEL_LOG(userToDelete, deletingUser);
+                        response = ctrl.REQ_DEL_LOG(userToDelete, deletingUser);
                     }
                 }
 
@@ -372,6 +376,19 @@ public class ClientHandler implements Runnable {
                         e.printStackTrace();
                     }
 
+                }
+
+                synchronized (IncomingCMDs) {
+                    for (String cmd : IncomingCMDs) {
+                        try {
+                            System.out.println("CMD sent: " + cmd);
+                            sendBytes(DataEncryptor.encrypt(cmd, secretKey));
+                            IncomingCMDs.remove(cmd);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                    }
                 }
             }
         } catch (IOException e) {

@@ -26,7 +26,10 @@ public class Controller {
                 continue;
 
             try {
-                clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey));
+                synchronized (clientHandler.IncomingCMDs) {
+                    clientHandler.IncomingCMDs.add(cmd);
+                }
+                // clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -36,9 +39,15 @@ public class Controller {
 
     public void CMD(String cmd, UUID uuid) {
         for (ClientHandler clientHandler : handlers) {
+
             if (clientHandler.ctrl.user.ID == uuid) {
                 try {
-                    clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey));
+                    synchronized (clientHandler.IncomingCMDs) {
+                        clientHandler.IncomingCMDs.add(cmd);
+                    }
+                    // clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey));
+                    // System.out.println("Message " + cmd + "sent to" +
+                    // clientHandler.ctrl.user.ID.toString());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -101,6 +110,8 @@ public class Controller {
             user.Email = email;
             user.PasswordHash = password;
             model.modifyOrCreateUser(user);
+            isAuth = true;
+
             return "ANS_ADD_USER-" + login + "-" + email;
 
         } catch (Exception e) {
@@ -184,53 +195,72 @@ public class Controller {
      */
 
     public void REQ_INV_LOG(String userToInvite, String invitingUser) {
-        // if (!isAuth)
-        // return;
-        // CMD_INV_LOG(userToInvite, invitingUser);
-
-        // return "ANS_USER_DATA-DENIED-NOACCESS";
-        // TODO: Implement logic to send CMD_INV_LOG to userToInvite
-        // This requires knowledge of other connected clients.
-        // response = "Server processed invitation request for " + userToInvite + " from
-        // " + invitingUser; // Client receives no direct ACK here
-        // CMD_INV_LOG-(login_zapraszającego)
-    }
-
-    public synchronized void CMD_INV_LOG(String userToInvite, String invitingUser) {
-        // for (ClientHandler handler : handlers) {
-
-        // }
+        if (!isAuth)
+            return;
+        try {
+            CMD("CMD_INV_LOG-" + invitingUser, model.findUser(userToInvite).ID);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
     }
 
     public void REQ_INV_EMAIL(String emailToInvite, String invitingUser) {
-        // TODO: Implement logic to send CMD_INV_LOG to userToInvite
-        // This requires knowledge of other connected clients.
-        // response = "Server processed invitation request for " + userToInvite + " from
-        // " + invitingUser; // Client receives no direct ACK here
-        // CMD_INV_LOG-(login_zapraszającego)
-    }
-
-    /* DODAć to */
-    public void REQ_DEL_LOG(String userToDelete, String deletingUser) {
-        // TODO: Implement logic to send CMD_INV_LOG to userToInvite
-        // This requires knowledge of other connected clients.
-        // response = "Server processed invitation request for " + userToInvite + " from
-        // " + invitingUser; // Client receives no direct ACK here
-        // CMD_DEL_LOG-(login_zapraszającego)
-    }
-
-    public String REQ_INV_STATUS(String invitingUser, String invitedUser, String status) {
-        if ("ACCEPTED".equals(status)) {
-            // TODO: Add to friends list in database
-            return "ANS_INV_LOG-ACCEPT-" + invitedUser;
-        } else if ("DENIED".equals(status)) {
-            return "ANS_INV_LOG-DENIED-" + invitedUser;
+        if (!isAuth)
+            return;
+        try {
+            CMD("CMD_INV_LOG-" + invitingUser, model.findUser(emailToInvite).ID);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
         }
+    }
 
-        return "ANS_INV_LOG-DENIED-" + invitedUser;
+    public String REQ_DEL_LOG(String userToDelete, String deletingUser) {
+        try {
+            CMD("CMD_DEL_LOG-" + deletingUser, model.findUser(userToDelete).ID);
+            User u1 = model.findUser(userToDelete);
+            User u2 = model.findUser(deletingUser);
+
+            // numbers.removeIf( n -> n % 2 == 0 );
+
+            u1.FriendsList.removeIf(n -> n == u2.ID);
+            u2.FriendsList.removeIf(n -> n == u1.ID);
+
+            CMD("ANS_INV_LOG-ACCEPT-" + userToDelete, model.findUser(deletingUser).ID);
+            return "ANS_DEL_LOG-ACCEPT-" + userToDelete;
+        } catch (Exception e) {
+            return "ANS_DEL_LOG-DENIED-" + userToDelete;
+        }
+    }
+
+    public void REQ_INV_STATUS(String invitingUser, String invitedUser, String status) {
+        if ("ACCEPTED".equals(status)) {
+            try {
+                User u1 = model.findUser(invitingUser);
+                User u2 = model.findUser(invitedUser);
+
+                u1.FriendsList.add(u2.ID);
+                u2.FriendsList.add(u1.ID);
+
+                CMD("ANS_INV_LOG-ACCEPT-" + invitedUser, model.findUser(invitingUser).ID);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        } else if ("DENIED".equals(status)) {
+            try {
+                CMD("ANS_INV_LOG-DENIED-" + invitedUser, model.findUser(invitingUser).ID);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
+        }
     }
 
     public String REQ_CRT_CHAT(String login, String chatName) {
+        if (!isAuth)
+            return "ANS_CRT_CHAT-DENIED-ERROR";
 
         try {
             Chat chat = model.findChat(chatName);
@@ -257,6 +287,9 @@ public class Controller {
     }
 
     public String REQ_ADD_CHAT(String chatName, String sendingLogin, String[] usersToAdd) {
+        if (!isAuth)
+            return "ANS_ADD_CHAT-DENIED-ERROR";
+
         try {
             Chat chat = model.findChat(chatName);
             User sendingUser = model.findUser(sendingLogin);
@@ -279,6 +312,9 @@ public class Controller {
     }
 
     public String REQ_CHAN_CHAT_NAME(String login, String oldChatName, String newChatName) {
+        if (!isAuth)
+            return "ANS_CHAN_CHAT_NAME-ERROR";
+
         try {
             Chat chat = model.findChat(oldChatName);
             User sendingUser = model.findUser(login);
@@ -298,6 +334,8 @@ public class Controller {
     }
 
     public String REQ_CHAN_CHAT_RANK(String chatName, String requestingLogin, String changedLogin, String rank) {
+        if (!isAuth)
+            return "ANS_CHAN_CHAT_RANK-DENIED-ERROR";
 
         try {
             Chat chat = model.findChat(chatName);
@@ -321,6 +359,9 @@ public class Controller {
     }
 
     public String REQ_DEL_CHAT(String chatName, String sendingLogin, String[] usersToRemove) {
+        if (!isAuth)
+            return "ANS_DEL_CHAT-DENIED-ERROR";
+
         try {
             Chat chat = model.findChat(chatName);
             User sendingUser = model.findUser(sendingLogin);
@@ -344,6 +385,9 @@ public class Controller {
     }
 
     public String REQ_DES_CHAT(String login, String chatName) {
+        if (!isAuth)
+            return "ANS_DES_CHAT-DENIED-ERROR";
+
         try {
             Chat chat = model.findChat(chatName);
             User sendingUser = model.findUser(login);
