@@ -59,7 +59,7 @@ public class AccountCreatorController {
 
     @FXML
     public void initialize(){
-
+        connectionEstablished = false;
         EventHandler<MouseEvent> create = new EventHandler<MouseEvent>() {
             
             @Override
@@ -77,15 +77,14 @@ public class AccountCreatorController {
                         }
                         if (requestAccountCreate() ){
                             handleSwitchToMainView();
-                        }
-                        else {
+                        } else {
                             dataController.closeConnection();
                             connectionEstablished = false;
                         }
                     } catch (IOException e) {
                         Logger.getLogger().logError("Error while switching from AccountCreator to MainView");
                     }
-                    
+
                 }
             }
         };

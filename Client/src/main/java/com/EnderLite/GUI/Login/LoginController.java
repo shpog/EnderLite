@@ -62,7 +62,7 @@ public class LoginController{
     public void initialize(){
         badPassw.setVisible(false);
         badLoginEmail.setVisible(false);
-        
+        connectionEstablished = false;
 
         EventHandler<MouseEvent> logIn = new EventHandler<MouseEvent>(){
 

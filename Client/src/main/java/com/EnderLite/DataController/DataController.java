@@ -217,6 +217,8 @@ public class DataController {
         } catch (InterruptedException e){
             Logger.getLogger().logError("Interrupt while responding to add friend request!");
         }
+        if (accepted)
+            addFriend(login);
     }
 
     public void reqRemoveUser(String login){
