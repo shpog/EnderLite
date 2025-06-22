@@ -5,52 +5,46 @@ import java.lang.reflect.Modifier;
 import com.EnderLite.Model.*;
 import com.EnderLite.Utils.*;
 
-import java.util.ArrayList;
-import java.util.UUID;
+import java.util.*;
 
 public class Controller {
 
     public Boolean isAuth = false;
     public Model model;
     public User user;
-    public ArrayList<ClientHandler> handlers;
+    public List<ClientHandler> handlers;
 
-    public Controller(ArrayList<ClientHandler> handlerList) {
+    public Controller(List<ClientHandler> handlerList) {
         model = new Model();
         handlers = handlerList;
     }
 
     public void CMD(String cmd) {
+        System.out.println("Sending command " + cmd);
+        System.out.println("Detected " + handlers.size() + " handlers");
+
         for (ClientHandler clientHandler : handlers) {
             if (clientHandler.ctrl.user == user)
                 continue;
 
-            try {
-                synchronized (clientHandler.IncomingCMDs) {
-                    clientHandler.IncomingCMDs.add(cmd);
-                }
-                // clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            clientHandler.IncomingCMDs.add(cmd);
+            System.out.println("Message " + cmd + "sent to" +
+                    clientHandler.ctrl.user.ID.toString());
 
         }
     }
 
     public void CMD(String cmd, UUID uuid) {
-        for (ClientHandler clientHandler : handlers) {
+        System.out.println("Sending command " + cmd);
+        System.out.println("Detected " + handlers.size() + "handlers");
 
-            if (clientHandler.ctrl.user.ID == uuid) {
-                try {
-                    synchronized (clientHandler.IncomingCMDs) {
-                        clientHandler.IncomingCMDs.add(cmd);
-                    }
-                    // clientHandler.sendBytes(DataEncryptor.encrypt(cmd, clientHandler.secretKey));
-                    // System.out.println("Message " + cmd + "sent to" +
-                    // clientHandler.ctrl.user.ID.toString());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        for (ClientHandler clientHandler : handlers) {
+            System.out.println("Detected user " + clientHandler.ctrl.user.ID.toString());
+            if (clientHandler.ctrl.user.ID.equals(uuid)) {
+                // try {
+                System.out.println("Message " + cmd + " sent to " +
+                        clientHandler.ctrl.user.ID.toString());
+                clientHandler.IncomingCMDs.add(cmd);
                 return;
             }
         }
@@ -136,12 +130,12 @@ public class Controller {
                 userData += "-F=";
 
             for (UUID uuid : u.FriendsList) {
-                userData += model.getUser(uuid).Login + ",";
+                User friend = model.getUser(uuid);
+                userData += friend.Login + ",";
             }
 
             if (u.ChatsList.size() > 0)
                 userData += "-C=";
-            System.out.println("Chateneawfnbjkawbn: " + String.valueOf(u.ChatsList.size()));
 
             for (UUID uuid : u.ChatsList) {
 
@@ -201,7 +195,7 @@ public class Controller {
             CMD("CMD_INV_LOG-" + invitingUser, model.findUser(userToInvite).ID);
         } catch (Exception e) {
             e.printStackTrace();
-            return;
+
         }
     }
 
@@ -212,7 +206,7 @@ public class Controller {
             CMD("CMD_INV_LOG-" + invitingUser, model.findUser(emailToInvite).ID);
         } catch (Exception e) {
             e.printStackTrace();
-            return;
+
         }
     }
 
@@ -226,6 +220,9 @@ public class Controller {
 
             u1.FriendsList.removeIf(n -> n == u2.ID);
             u2.FriendsList.removeIf(n -> n == u1.ID);
+
+            model.modifyOrCreateUser(u1);
+            model.modifyOrCreateUser(u2);
 
             CMD("ANS_INV_LOG-ACCEPT-" + userToDelete, model.findUser(deletingUser).ID);
             return "ANS_DEL_LOG-ACCEPT-" + userToDelete;
@@ -242,6 +239,11 @@ public class Controller {
 
                 u1.FriendsList.add(u2.ID);
                 u2.FriendsList.add(u1.ID);
+
+                System.out.println("REQ_INV_STATUS:: " + u2.ID + u1.ID);
+
+                model.modifyOrCreateUser(u1);
+                model.modifyOrCreateUser(u2);
 
                 CMD("ANS_INV_LOG-ACCEPT-" + invitedUser, model.findUser(invitingUser).ID);
             } catch (Exception e) {

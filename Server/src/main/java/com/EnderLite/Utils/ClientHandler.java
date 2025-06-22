@@ -18,6 +18,8 @@ import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -28,7 +30,7 @@ import javax.crypto.SecretKey;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-public class ClientHandler implements Runnable {
+public class ClientHandler extends Thread {
     public Controller ctrl;
     private final Socket clientSocket;
 
@@ -37,16 +39,19 @@ public class ClientHandler implements Runnable {
 
     public volatile SecretKey secretKey;
 
-    private ArrayList<ClientHandler> handlers;
+    private List<ClientHandler> handlers;
 
-    public List<String> IncomingCMDs;
+    public final ArrayList<String> IncomingCMDs;
 
-    public ClientHandler(Socket socket, ArrayList<ClientHandler> clients) {
+    public ClientHandler(Socket socket, List<ClientHandler> clients) {
         clientSocket = socket;
         handlers = clients;
         ctrl = new Controller(handlers);
-        IncomingCMDs = Collections.synchronizedList(new ArrayList<String>());
+        IncomingCMDs = new ArrayList<String>();
+    }
 
+    public void updateHandlers(List<ClientHandler> clients) {
+        handlers = clients;
     }
 
     public byte[] readBytes() {
@@ -154,6 +159,19 @@ public class ClientHandler implements Runnable {
 
             while (true) {
 
+                IncomingCMDs.forEach((msg) -> {
+                    System.out.println("CMD sent: " + msg);
+                    try {
+                        sendBytes(DataEncryptor.encrypt(msg, secretKey));
+                    } catch (Exception e) {
+                        System.out.println("Error sending: " + msg);
+                        e.printStackTrace();
+                    }
+
+                });
+                IncomingCMDs.clear();
+
+                response = "";
                 byte[] receivedBytes = readBytes();
                 if (receivedBytes == null || receivedBytes.length == 0) {
                     System.out.println("Client " + clientSocket.getInetAddress() + " disconnected");
@@ -378,18 +396,6 @@ public class ClientHandler implements Runnable {
 
                 }
 
-                synchronized (IncomingCMDs) {
-                    for (String cmd : IncomingCMDs) {
-                        try {
-                            System.out.println("CMD sent: " + cmd);
-                            sendBytes(DataEncryptor.encrypt(cmd, secretKey));
-                            IncomingCMDs.remove(cmd);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                }
             }
         } catch (IOException e) {
             e.printStackTrace();

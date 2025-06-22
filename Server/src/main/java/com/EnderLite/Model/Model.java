@@ -40,11 +40,9 @@ public class Model {
 
         user.ChatsList = new ArrayList<UUID>();
         JSONArray chatsList = jsonObject.getJSONArray("chatsList");
-        System.out.println("Chat: " + chatsList.toString());
 
         for (int i = 0; i < chatsList.length(); i++) {
             user.ChatsList.add(UUID.fromString(chatsList.getString(i)));
-            System.out.println("Chat: " + chatsList.getString(i));
         }
 
         return user;
@@ -78,7 +76,6 @@ public class Model {
         prefs.put(user.ID.toString(), jsonObject.toString());
         try {
             prefs.sync();
-            prefs.flush();
         } catch (BackingStoreException e) {
             e.printStackTrace();
         }
@@ -153,17 +150,20 @@ public class Model {
     public User findUser(String key) {
         try {
             Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
+
+            prefs.sync();
+
             String[] allUsers = prefs.keys();
             for (String uuid : allUsers) {
 
                 JSONObject jsonObject = new JSONObject(prefs.get(uuid,
                         "{\"login\":\"none\",\"email\":\"none\",\"passwordHash\":\"none\"}"));
-                // TODO .equals()
                 if (jsonObject.getString("login").equals(key) || jsonObject.getString("email").equals(key)) {
                     return getUser(uuid);
                 }
             }
             prefs.sync();
+            prefs.flush();
             return null;
         } catch (BackingStoreException e) {
             e.printStackTrace();
@@ -174,6 +174,9 @@ public class Model {
     public Chat findChat(String key) {
         try {
             Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
+
+            prefs.sync();
+
             String[] allChats = prefs.keys();
             for (String uuid : allChats) {
                 JSONObject jsonObject = new JSONObject(prefs.get(uuid,
@@ -182,7 +185,9 @@ public class Model {
                     return getChat(uuid);
                 }
             }
-            prefs.sync();
+
+            prefs.flush();
+
             return null;
         } catch (BackingStoreException e) {
             e.printStackTrace();
