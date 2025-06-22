@@ -18,6 +18,8 @@ public class App {
         try {
             Model model = new Model();
             model.removeAllUsers();
+            model.removeAllChats();
+
         } catch (Exception e) {
         }
 

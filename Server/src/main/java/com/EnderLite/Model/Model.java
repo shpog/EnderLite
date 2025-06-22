@@ -40,8 +40,11 @@ public class Model {
 
         user.ChatsList = new ArrayList<UUID>();
         JSONArray chatsList = jsonObject.getJSONArray("chatsList");
+        System.out.println("Chat: " + chatsList.toString());
+
         for (int i = 0; i < chatsList.length(); i++) {
-            user.ChatsList.add(UUID.fromString(friendsList.getString(i)));
+            user.ChatsList.add(UUID.fromString(chatsList.getString(i)));
+            System.out.println("Chat: " + chatsList.getString(i));
         }
 
         return user;
@@ -49,27 +52,6 @@ public class Model {
 
     public User getUser(String uuid) {
         return getUser(UUID.fromString(uuid));
-    }
-
-    public User findUser(String key) {
-        try {
-            Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
-            String[] allUsers = prefs.keys();
-            for (String uuid : allUsers) {
-
-                JSONObject jsonObject = new JSONObject(prefs.get(uuid,
-                        "{\"login\":\"none\",\"email\":\"none\",\"passwordHash\":\"none\"}"));
-                // TODO .equals()
-                if (jsonObject.getString("login").equals(key) || jsonObject.getString("email").equals(key)) {
-                    return getUser(uuid);
-                }
-            }
-            prefs.sync();
-            return null;
-        } catch (BackingStoreException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     public User modifyOrCreateUser(User user) {
@@ -168,15 +150,36 @@ public class Model {
         return getChat(UUID.fromString(uuid));
     }
 
+    public User findUser(String key) {
+        try {
+            Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
+            String[] allUsers = prefs.keys();
+            for (String uuid : allUsers) {
+
+                JSONObject jsonObject = new JSONObject(prefs.get(uuid,
+                        "{\"login\":\"none\",\"email\":\"none\",\"passwordHash\":\"none\"}"));
+                // TODO .equals()
+                if (jsonObject.getString("login").equals(key) || jsonObject.getString("email").equals(key)) {
+                    return getUser(uuid);
+                }
+            }
+            prefs.sync();
+            return null;
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public Chat findChat(String key) {
         try {
             Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
             String[] allChats = prefs.keys();
             for (String uuid : allChats) {
-                JSONObject jsonObject = new JSONObject(uuid);
+                JSONObject jsonObject = new JSONObject(prefs.get(uuid,
+                        "{\"name\":\"none\"}"));
                 if (jsonObject.getString("name").equals(key)) {
-                    return getChat(prefs.get(uuid,
-                            "{\"name\":\"none\"}"));
+                    return getChat(uuid);
                 }
             }
             prefs.sync();
@@ -233,6 +236,15 @@ public class Model {
 
     public void removeAllUsers() throws BackingStoreException {
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
+
+        for (String key : prefs.keys()) {
+            prefs.remove(key);
+        }
+
+    }
+
+    public void removeAllChats() throws BackingStoreException {
+        Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
 
         for (String key : prefs.keys()) {
             prefs.remove(key);

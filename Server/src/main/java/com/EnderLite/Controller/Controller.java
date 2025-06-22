@@ -119,15 +119,21 @@ public class Controller {
                 return "ANS_USER_DATA-DENIED-ERROR";
 
             String userData = "L=" + requestedLogin
-                    + "-E=" + u.Email + "-F=";
+                    + "-E=" + u.Email;
+
+            if (u.FriendsList.size() > 0)
+                userData += "-F=";
 
             for (UUID uuid : u.FriendsList) {
                 userData += model.getUser(uuid).Login + ",";
             }
 
-            userData += "-C=";
+            if (u.ChatsList.size() > 0)
+                userData += "-C=";
+            System.out.println("Chateneawfnbjkawbn: " + String.valueOf(u.ChatsList.size()));
 
             for (UUID uuid : u.ChatsList) {
+
                 Chat chat = model.getChat(uuid);
                 userData += chat.Name + "-";
 
@@ -237,6 +243,11 @@ public class Controller {
             chat.Admins.add(model.findUser(login).ID);
 
             model.modifyOrCreateChat(chat);
+
+            user = model.getUser(user.ID);
+            user.ChatsList.add(chat.ID);
+            model.modifyOrCreateUser(user);
+
             return "ANS_CRT_CHAT-ACCEPT";
 
         } catch (Exception e) {
