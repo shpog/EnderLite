@@ -32,7 +32,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class ClientHandler extends Thread {
     public Controller ctrl;
-    private final Socket clientSocket;
+    public final Socket clientSocket;
 
     private DataOutputStream out;
     private DataInputStream in;
@@ -41,13 +41,10 @@ public class ClientHandler extends Thread {
 
     private List<ClientHandler> handlers;
 
-    public final ArrayList<String> IncomingCMDs;
-
     public ClientHandler(Socket socket, List<ClientHandler> clients) {
         clientSocket = socket;
         handlers = clients;
         ctrl = new Controller(handlers);
-        IncomingCMDs = new ArrayList<String>();
     }
 
     public void updateHandlers(List<ClientHandler> clients) {
@@ -158,19 +155,6 @@ public class ClientHandler extends Thread {
                         .println("Client " + clientSocket.getInetAddress() + " handshake failed. Forcing disconnect.");
 
             while (true) {
-
-                IncomingCMDs.forEach((msg) -> {
-                    System.out.println("CMD sent: " + msg);
-                    try {
-                        sendBytes(DataEncryptor.encrypt(msg, secretKey));
-                    } catch (Exception e) {
-                        System.out.println("Error sending: " + msg);
-                        e.printStackTrace();
-                    }
-
-                });
-                IncomingCMDs.clear();
-
                 response = "";
                 byte[] receivedBytes = readBytes();
                 if (receivedBytes == null || receivedBytes.length == 0) {

@@ -38,7 +38,6 @@ public class App {
                 System.out.println("New client connected "
                         + client.getInetAddress()
                                 .getHostAddress());
-                // ClientHandler clientSock = new ClientHandler(client);
                 ClientHandler handler = new ClientHandler(client, clients);
                 clients.add(handler);
 

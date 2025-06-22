@@ -26,8 +26,8 @@ public class Controller {
         for (ClientHandler clientHandler : handlers) {
             if (clientHandler.ctrl.user == user)
                 continue;
+            new CMDHandler(clientHandler.clientSocket, cmd, clientHandler.secretKey).start();
 
-            clientHandler.IncomingCMDs.add(cmd);
             System.out.println("Message " + cmd + "sent to" +
                     clientHandler.ctrl.user.ID.toString());
 
@@ -41,10 +41,9 @@ public class Controller {
         for (ClientHandler clientHandler : handlers) {
             System.out.println("Detected user " + clientHandler.ctrl.user.ID.toString());
             if (clientHandler.ctrl.user.ID.equals(uuid)) {
-                // try {
                 System.out.println("Message " + cmd + " sent to " +
                         clientHandler.ctrl.user.ID.toString());
-                clientHandler.IncomingCMDs.add(cmd);
+                new CMDHandler(clientHandler.clientSocket, cmd, clientHandler.secretKey).start();
                 return;
             }
         }
@@ -60,11 +59,9 @@ public class Controller {
             return "AUTH_RESP-DENIED-";
 
         } catch (Exception e) {
-            // e.printStackTrace();
             return "AUTH_RESP-DENIED-";
-
         }
-        // return "AUTH_RESP-DENIED";
+
     }
 
     public String AUTH_EMAIL(String email, String password) {
@@ -216,10 +213,10 @@ public class Controller {
             User u1 = model.findUser(userToDelete);
             User u2 = model.findUser(deletingUser);
 
-            // numbers.removeIf( n -> n % 2 == 0 );
-
             u1.FriendsList.removeIf(n -> n == u2.ID);
             u2.FriendsList.removeIf(n -> n == u1.ID);
+
+            System.out.println("REQ_DEL_STATUS:: " + u2.ID + u1.ID);
 
             model.modifyOrCreateUser(u1);
             model.modifyOrCreateUser(u2);
@@ -247,6 +244,8 @@ public class Controller {
 
                 CMD("ANS_INV_LOG-ACCEPT-" + invitedUser, model.findUser(invitingUser).ID);
             } catch (Exception e) {
+                System.out.println("REQ_INV_STATUS::ERROR");
+
                 e.printStackTrace();
             }
 
@@ -267,7 +266,7 @@ public class Controller {
         try {
             Chat chat = model.findChat(chatName);
             if (chat != null)
-                return "ANS_CRT_CHAT-DENIED-USED";
+                return "ANS_CRT_CHAT-DENIED- USED";
 
             chat = new Chat();
             chat.ID = UUID.randomUUID();
@@ -278,6 +277,7 @@ public class Controller {
 
             user = model.getUser(user.ID);
             user.ChatsList.add(chat.ID);
+
             model.modifyOrCreateUser(user);
 
             return "ANS_CRT_CHAT-ACCEPT";
@@ -299,11 +299,16 @@ public class Controller {
             if (!chat.Admins.contains(sendingUser.ID))
                 return "ANS_ADD_CHAT-DENIED-NOACCESS";
 
+            System.out.println(usersToAdd.length);
             for (String userLogin : usersToAdd) {
                 User u = model.findUser(userLogin);
+                u.ChatsList.add(chat.ID);
                 chat.Members.add(u.ID);
+                model.modifyOrCreateUser(u);
+
                 CMD("CMD_ADD_CHAT-" + chatName, u.ID);
             }
+            model.modifyOrCreateChat(chat);
 
             return "ANS_ADD_CHAT-ACCEPT";
 
@@ -325,6 +330,8 @@ public class Controller {
                 return "ANS_CHAN_CHAT_NAME-NOACCESS";
 
             chat.Name = newChatName;
+            model.modifyOrCreateChat(chat);
+
             CMD("CMD_CHAN_CHAT_NAME-" + oldChatName + "-" + newChatName);
 
             return "ANS_CHAN_CHAT_NAME-ACCEPT";
@@ -351,6 +358,7 @@ public class Controller {
                 chat.Admins.add(changedUser.ID);
             else if (chat.Admins.contains(changedUser.ID))
                 chat.Admins.removeIf(n -> n == changedUser.ID);
+            model.modifyOrCreateChat(chat);
 
             return "ANS_CHAN_CHAT_RANK-ACCEPT";
 
@@ -376,6 +384,8 @@ public class Controller {
                 if (chat.Members.contains(userToRemove.ID))
                     chat.Members.removeIf(n -> n == userToRemove.ID);
             }
+
+            model.modifyOrCreateChat(chat);
 
             return "ANS_DEL_CHAT-ACCEPT";
 
