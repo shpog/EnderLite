@@ -232,7 +232,7 @@ public class Controller {
     }
 
     public void REQ_INV_STATUS(String invitingUser, String invitedUser, String status) {
-        if ("ACCEPTED".equals(status)) {
+        if ("ACCEPT".equals(status)) {
             try {
                 User u1 = model.findUser(invitingUser);
                 User u2 = model.findUser(invitedUser);
