@@ -78,11 +78,14 @@ public class AccountCreatorController {
                         if (requestAccountCreate() ){
                             handleSwitchToMainView();
                         }
+                        else {
+                            dataController.closeConnection();
+                            connectionEstablished = false;
+                        }
                     } catch (IOException e) {
                         Logger.getLogger().logError("Error while switching from AccountCreator to MainView");
                     }
-                    dataController.closeConnection();
-                    connectionEstablished = false;
+                    
                 }
             }
         };

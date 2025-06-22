@@ -93,6 +93,8 @@ public class LoginController{
 
                         badLoginEmail.setText("Błąd połączenia! Spróbuj ponownie");
                         badLoginEmail.setVisible(true);
+                        dataController.closeConnection();
+                        connectionEstablished = false;
                     } else if (status == ResponseStatus.ACCEPTED){
                         try{
                             dataController.reqUserData();
@@ -107,9 +109,10 @@ public class LoginController{
 
                         badLoginEmail.setText("Błędne dane!");
                         badLoginEmail.setVisible(true);
+                        dataController.closeConnection();
+                        connectionEstablished = false;
                     }
-                    dataController.closeConnection();
-                    connectionEstablished = false;
+                    
                 }
             }
         };
