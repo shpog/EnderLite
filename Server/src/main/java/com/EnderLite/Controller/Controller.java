@@ -272,6 +272,7 @@ public class Controller {
             chat.ID = UUID.randomUUID();
             chat.Name = chatName;
             chat.Admins.add(model.findUser(login).ID);
+            chat.Members.add(model.findUser(login).ID);
 
             model.modifyOrCreateChat(chat);
 
@@ -419,20 +420,32 @@ public class Controller {
     }
 
     public String SEND_DATA(String login, String chatName, String data) {
-        // TODO: Store data in database for chatName, associated with login and
-        // timestamp
-        // And send CMD_WRITE_DATA to other clients in chat
-        boolean sendSuccess = true; // Replace with actual logic
-        if (sendSuccess) {
-            long timestamp = System.currentTimeMillis();
-            return "ANS_SEND_DATA-ACCEPT-" + timestamp;
-        }
+        if (!isAuth)
+            return "ANS_SEND_DATA-DENIED-ERROR";
 
-        boolean badChatName = false; // Replace with actual check
-        if (badChatName) {
+        try {
+            Chat chat = model.findChat(chatName);
+            User sendingUser = model.findUser(login);
+
+            if (!chat.Members.contains(sendingUser.ID))
+                return "ANS_SEND_DATA-DENIED-ERROR";
+
+            MessageEntry msg = new MessageEntry();
+            msg.Sender = sendingUser;
+            msg.Date = new Date();
+            long timestamp = msg.Date.getTime();
+            msg.Content = data;
+
+            model.createMessageEntry(chat.ID, msg);
+
+            CMD("CMD_WRITE_DATA-" + chatName + "-" + login + "-" + data + "-" + String.valueOf(timestamp));
+
+            return "ANS_SEND_DATA-ACCEPT-" + String.valueOf(timestamp);
+
+        } catch (Exception e) {
+            e.printStackTrace();
             return "ANS_SEND_DATA-DENIED-NAME";
         }
-        return "ANS_SEND_DATA-DENIED-ERROR";
     }
 
     // public String GET_DATA(String login, String chatName, String commandType) {
