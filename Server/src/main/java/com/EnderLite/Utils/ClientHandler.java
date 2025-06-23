@@ -270,14 +270,14 @@ public class ClientHandler extends Thread {
 
                 else if (line.startsWith("REQ_ADD_CHAT-")) {
                     String[] parts = line.split("-");
-                    if (parts.length >= 4 && parts[0].equals("REQ_ADD_CHAT") && parts[1].startsWith("C=")
-                            && parts[3].startsWith("L={")) {
-                        String chatName = parts[1].substring(2);
-                        String sendingLogin = parts[2];
-                        String usersToAddString = parts[3].substring(3, parts[3].length() - 1);
-                        String[] usersToAdd = usersToAddString.split(",");
-                        response = ctrl.REQ_ADD_CHAT(chatName, sendingLogin, usersToAdd);
-                    }
+                    // if (parts.length >= 4 && parts[0].equals("REQ_ADD_CHAT") &&
+                    // parts[3].startsWith("L={")) {
+                    String chatName = parts[1];
+                    String sendingLogin = parts[2];
+                    String usersToAddString = parts[3].substring(2, parts[3].length());
+                    String[] usersToAdd = usersToAddString.split(",");
+                    response = ctrl.REQ_ADD_CHAT(chatName, sendingLogin, usersToAdd);
+                    // }
                 }
 
                 else if (line.startsWith("REQ_CHAN_CHAT_NAME-")) {

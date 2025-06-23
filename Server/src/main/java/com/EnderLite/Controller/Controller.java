@@ -299,7 +299,7 @@ public class Controller {
             if (!chat.Admins.contains(sendingUser.ID))
                 return "ANS_ADD_CHAT-DENIED-NOACCESS";
 
-            System.out.println(usersToAdd.length);
+            System.out.println(usersToAdd[0]);
             for (String userLogin : usersToAdd) {
                 User u = model.findUser(userLogin);
                 u.ChatsList.add(chat.ID);
