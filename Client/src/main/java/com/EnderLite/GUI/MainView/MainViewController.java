@@ -337,7 +337,10 @@ public class MainViewController {
                     public void handle(MouseEvent event){
                         List<String> list = new ArrayList<String>();
                         list.add(item);
-                        DataController.getDataController().reqAddUserToChat("Chat1", list);
+                        DataController dataController = DataController.getDataController();
+                        if (dataController.getActiveChat() != null){
+                            DataController.getDataController().reqAddUserToChat(DataController.getDataController().getActiveChat().getId(), list);
+                        }
                     }
                 };
 
