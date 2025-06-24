@@ -16,11 +16,18 @@ import org.json.JSONException;
 
 import java.util.prefs.BackingStoreException;
 
+/**
+ * Class representing Model, it interacts directly with the database.
+ */
 public class Model {
-    public Model() {
 
-    }
-
+    /**
+     * Method requesting User of certain ID
+     * 
+     * @param uuid requested User ID
+     * @return requested User
+     * @see User
+     */
     public User getUser(UUID uuid) {
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
         JSONObject jsonObject = new JSONObject(
@@ -48,10 +55,24 @@ public class Model {
         return user;
     }
 
+    /**
+     * Method requesting User of certain ID
+     * 
+     * @param uuid requested User ID
+     * @return requested User
+     * @see User
+     */
     public User getUser(String uuid) {
         return getUser(UUID.fromString(uuid));
     }
 
+    /**
+     * Method creating or modifying User from User object
+     * 
+     * @param user User object
+     * @return Created or modified User
+     * @see User
+     */
     public User modifyOrCreateUser(User user) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("login", user.Login);
@@ -83,6 +104,14 @@ public class Model {
         return user;
     }
 
+    /**
+     * Method requesting MessageEntry from chat of certain ID
+     * 
+     * @param uuid      requested Chat ID
+     * @param messageID requested message ID
+     * @return requested MessageEntry
+     * @see MessageEntry
+     */
     public MessageEntry getMessageEntry(UUID uuid, long messageID) {
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats").node(uuid.toString())
                 .node("History");
@@ -97,10 +126,27 @@ public class Model {
         return message;
     }
 
+    /**
+     * Method requesting MessageEntry from chat of certain ID
+     * 
+     * @param uuid      requested Chat ID
+     * @param messageID requested message ID
+     * @return requested MessageEntry
+     * @see MessageEntry
+     */
     public MessageEntry getMessageEntry(String uuid, long messageID) {
         return getMessageEntry(UUID.fromString(uuid), messageID);
     }
 
+    /**
+     * Method creating or modifying MessageEntry from MessageEntry object and Chat
+     * ID
+     * 
+     * @param uuid    Chat to which we send new MessageEntry
+     * @param message MessageEntry object we send
+     * @return Created or modified MessageEntry
+     * @see MessageEntry
+     */
     public MessageEntry createMessageEntry(UUID uuid, MessageEntry message) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("sender", message.Sender);
@@ -117,6 +163,14 @@ public class Model {
         }
         return message;
     }
+
+    /**
+     * Method requesting Chat of certain ID
+     * 
+     * @param uuid requested Chat ID
+     * @return requested Chat
+     * @see Chat
+     */
 
     public Chat getChat(UUID uuid) {
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
@@ -143,9 +197,25 @@ public class Model {
         return chat;
     }
 
+    /**
+     * Method requesting Chat of certain ID
+     * 
+     * @param uuid requested Chat ID
+     * @return requested Chat
+     * @see Chat
+     */
+
     public Chat getChat(String uuid) {
         return getChat(UUID.fromString(uuid));
     }
+
+    /**
+     * Method searching for User with known login or password
+     * 
+     * @param key Known login or password
+     * @return requested User
+     * @see User
+     */
 
     public User findUser(String key) {
         try {
@@ -171,6 +241,14 @@ public class Model {
         return null;
     }
 
+    /**
+     * Method searching for Chat of known name
+     * 
+     * @param key Known name
+     * @return requestedChat
+     * @see Chat
+     */
+
     public Chat findChat(String key) {
         try {
             Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
@@ -194,6 +272,14 @@ public class Model {
         }
         return null;
     }
+
+    /**
+     * Method creating or modifying Chat from Chat object
+     * 
+     * @param chat Chat object
+     * @return Created or modified Chat
+     * @see Chat
+     */
 
     public Chat modifyOrCreateChat(Chat chat) {
         JSONObject jsonObject = new JSONObject();
@@ -227,17 +313,35 @@ public class Model {
         return chat;
     }
 
+    /**
+     * Method removing Chat from known ID
+     * 
+     * @param uuid Known ID
+     * @see Chat
+     */
+
     public void removeChat(UUID uuid) throws BackingStoreException {
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
         prefs.remove(uuid.toString());
-
     }
+
+    /**
+     * Method removing User from known ID
+     * 
+     * @param uuid Known ID
+     * @see User
+     */
 
     public void removeUser(UUID uuid) throws BackingStoreException {
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
         prefs.remove(uuid.toString());
-
     }
+
+    /**
+     * Method removing all Users from database
+     * 
+     * @see User
+     */
 
     public void removeAllUsers() throws BackingStoreException {
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Users");
@@ -245,8 +349,13 @@ public class Model {
         for (String key : prefs.keys()) {
             prefs.remove(key);
         }
-
     }
+
+    /**
+     * Method removing all Chats from database
+     * 
+     * @see User
+     */
 
     public void removeAllChats() throws BackingStoreException {
         Preferences prefs = Preferences.userRoot().node(this.getClass().getName()).node("Chats");
@@ -254,7 +363,6 @@ public class Model {
         for (String key : prefs.keys()) {
             prefs.remove(key);
         }
-
     }
 
 }

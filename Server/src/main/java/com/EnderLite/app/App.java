@@ -7,19 +7,28 @@ import java.util.*;
 import java.io.*;
 import java.net.*;
 
+/**
+ * Main class
+ */
 public class App {
+
+    /**
+     * Main method
+     * 
+     * @param args Command-line arguments
+     */
     public static void main(String[] args) {
         System.out.println("Server is booting up...");
 
         // Here space for testing purpouses
 
-        try {
-            Model model = new Model();
-            model.removeAllUsers();
-            model.removeAllChats();
+        // try {
+        // Model model = new Model();
+        // model.removeAllUsers();
+        // model.removeAllChats();
 
-        } catch (Exception e) {
-        }
+        // } catch (Exception e) {
+        // }
 
         // Space for testing purpouses ends
 

@@ -30,27 +30,59 @@ import javax.crypto.SecretKey;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+/**
+ * Class that is responsible for sending sync messages.
+ */
 public class ClientHandler extends Thread {
+    /**
+     * Controller assigned to this handler
+     */
     public Controller ctrl;
+
     public final Socket clientSocket;
-
+    /**
+     * Output datastream, used by sendBytes
+     */
     private DataOutputStream out;
+    /**
+     * Input datastream, used by readBytes
+     */
     private DataInputStream in;
-
+    /**
+     * Key used to encode command.
+     */
     public volatile SecretKey secretKey;
-
+    /**
+     * List of all handlers; used in async messages
+     */
     private List<ClientHandler> handlers;
 
+    /**
+     * Method updating handlers list
+     * 
+     * @param socket  Socket to send messages through
+     * @param clients List of handlers
+     */
     public ClientHandler(Socket socket, List<ClientHandler> clients) {
         clientSocket = socket;
         handlers = clients;
         ctrl = new Controller(handlers);
     }
 
+    /**
+     * Method updating handlers list
+     * 
+     * @param clients List of handlers
+     */
     public void updateHandlers(List<ClientHandler> clients) {
         handlers = clients;
     }
 
+    /**
+     * Method responsible for reading encoded buffer directly from the socket
+     * 
+     * @return Buffer read from the socket.
+     */
     public byte[] readBytes() {
         byte[] buffer = null;
         try {
@@ -62,6 +94,11 @@ public class ClientHandler extends Thread {
         return buffer;
     }
 
+    /**
+     * Method responsible for sending encoded buffer directly through the socket
+     * 
+     * @param buffer Buffer to send.
+     */
     public void sendBytes(byte[] buffer) {
         try {
             out.writeLong(buffer.length);
@@ -71,6 +108,12 @@ public class ClientHandler extends Thread {
         }
     }
 
+    /**
+     * Method responsible for handshake procedure
+     * 
+     * @return State of handshake procedure: true if handshake succeed, false if
+     *         failed
+     */
     public boolean handshake() {
         Security.addProvider(new BouncyCastleProvider());
 
@@ -140,6 +183,9 @@ public class ClientHandler extends Thread {
         return true;
     }
 
+    /**
+     * Main Thread method, responsible for sending command.
+     */
     @Override
     public void run() {
         try {

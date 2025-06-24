@@ -6,23 +6,58 @@ import java.util.*;
 
 import javax.crypto.SecretKey;
 
+/**
+ * Class that is responsible for sending async messages.
+ */
 public class CMDHandler extends Thread {
+
+    /**
+     * Socket connected to the server
+     */
     private final Socket clientSocket;
 
+    /**
+     * Output datastream, used by sendBytes
+     * 
+     * @see sendBytes
+     */
     private DataOutputStream out;
+
+    /**
+     * Input datastream, used by readBytes
+     * 
+     * @see readBytes
+     */
     private DataInputStream in;
 
+    /**
+     * Key used to encode command.
+     */
     public volatile SecretKey secretKey;
 
-    public final ArrayList<String> IncomingCMDs;
+    /**
+     * Command to send.
+     */
     String cmd;
 
+    /**
+     * Method responsible for sending encoded buffer directly through the socket
+     * 
+     * @param socket  Socket to send messages through
+     * @param command Command to send.
+     * @param key     Key used to encode command.
+     */
     public CMDHandler(Socket socket, String command, SecretKey key) {
         clientSocket = socket;
-        IncomingCMDs = new ArrayList<String>();
         secretKey = key;
         cmd = command;
     }
+
+    /**
+     * Method responsible for reading encoded buffer directly from the socket
+     * 
+     * @return Buffer read from the socket.
+     */
 
     public byte[] readBytes() {
         byte[] buffer = null;
@@ -35,6 +70,12 @@ public class CMDHandler extends Thread {
         return buffer;
     }
 
+    /**
+     * Method responsible for sending encoded buffer directly through the socket
+     * 
+     * @param buffer Buffer to send.
+     */
+
     public void sendBytes(byte[] buffer) {
         try {
             out.writeLong(buffer.length);
@@ -43,6 +84,10 @@ public class CMDHandler extends Thread {
             System.err.println("Error while transmitting data!");
         }
     }
+
+    /**
+     * Main Thread method, responsible for sending command.
+     */
 
     @Override
     public void run() {
