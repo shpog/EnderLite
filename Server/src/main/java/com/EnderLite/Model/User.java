@@ -35,6 +35,9 @@ public class User {
      */
     public ArrayList<UUID> ChatsList;
 
+    /**
+     * Constructor, initializes FriendsList and ChatsList
+     */
     public User() {
         FriendsList = new ArrayList<UUID>();
         ChatsList = new ArrayList<UUID>();

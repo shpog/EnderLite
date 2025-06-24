@@ -7,18 +7,45 @@ import com.EnderLite.Utils.*;
 
 import java.util.*;
 
+/**
+ * Controller class - responisble for all decisions, operations and verification
+ */
 public class Controller {
 
+    /**
+     * Stores information about authortization of the current session.
+     */
     public Boolean isAuth = false;
+    /**
+     * Model corresponding to this controller
+     */
     public Model model;
+    /**
+     * User connected to this controller
+     */
     public User user;
+    /**
+     * List of all handlers; used in async messages
+     */
     public List<ClientHandler> handlers;
 
+    /**
+     * Initializes model and assigns handlers
+     * 
+     * @param handlerList List of handlers
+     */
     public Controller(List<ClientHandler> handlerList) {
         model = new Model();
         handlers = handlerList;
     }
 
+    /**
+     * Method responsible for sending async messages for every connected client
+     * (except the sender)
+     * 
+     * @param cmd Command to send
+     * 
+     */
     public void CMD(String cmd) {
         System.out.println("Sending command " + cmd);
         System.out.println("Detected " + handlers.size() + " handlers");
@@ -34,6 +61,13 @@ public class Controller {
         }
     }
 
+    /**
+     * Method responsible for sending async messages for known user
+     * 
+     * @param cmd  Command to send
+     * @param uuid ID of known user
+     * 
+     */
     public void CMD(String cmd, UUID uuid) {
         System.out.println("Sending command " + cmd);
         System.out.println("Detected " + handlers.size() + "handlers");
@@ -49,6 +83,15 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for authorization by login
+     * 
+     * @param login    User login
+     * @param password User password
+     * 
+     * @return Response
+     * 
+     */
     public String AUTH_LOG(String login, String password) {
         try {
             user = model.findUser(login);
@@ -64,6 +107,15 @@ public class Controller {
 
     }
 
+    /**
+     * Responsible for authorization by email
+     * 
+     * @param email    User email
+     * @param password User password
+     * 
+     * @return Response
+     * 
+     */
     public String AUTH_EMAIL(String email, String password) {
         try {
             user = model.findUser(email);
@@ -79,6 +131,12 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for confirming authorization
+     * 
+     * @return Response
+     * 
+     */
     public String AUTH_STATUS() {
         if (isAuth) {
             return "AUTH_RESP-login-email";
@@ -86,6 +144,16 @@ public class Controller {
         return "AUTH-RESPONSE_DENIED-";
     }
 
+    /**
+     * Responsible for creating new account
+     * 
+     * @param login    User login
+     * @param email    User email
+     * @param password User password
+     * 
+     * @return Response
+     * 
+     */
     public String REQ_ADD_USER(String login, String email, String password) {
         try {
             user = model.findUser(email);
@@ -111,6 +179,15 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for retrieving user data from database
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param requestedLogin User login
+     * 
+     * @return Response
+     * 
+     */
     public String REQ_USER_DATA(String requestedLogin) {
         if (!isAuth)
             return "ANS_USER_DATA-DENIED-NOACCESS";
@@ -184,7 +261,14 @@ public class Controller {
      * }
      * 
      */
-
+    /**
+     * Responsible for sending friend invites
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param userToInvite Invited user login
+     * @param invitingUser Sending user login
+     * 
+     */
     public void REQ_INV_LOG(String userToInvite, String invitingUser) {
         if (!isAuth)
             return;
@@ -196,6 +280,14 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for sending friend invites
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param emailToInvite Invited user email
+     * @param invitingUser  Sending user login
+     * 
+     */
     public void REQ_INV_EMAIL(String emailToInvite, String invitingUser) {
         if (!isAuth)
             return;
@@ -207,6 +299,16 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for deleting friends from friends list
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param userToDelete Deleted user email
+     * @param deletingUser Deleting user login
+     * 
+     * @return Response
+     * 
+     */
     public String REQ_DEL_LOG(String userToDelete, String deletingUser) {
         try {
             CMD("CMD_DEL_LOG-" + deletingUser, model.findUser(userToDelete).ID);
@@ -228,6 +330,16 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for confirmation of friend invites
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param invitingUser Sending user login
+     * @param invitedUser  Invited user email
+     * @param status       Invite status; ACCEPT to accept an invite, DENIED to deny
+     *                     it
+     * 
+     */
     public void REQ_INV_STATUS(String invitingUser, String invitedUser, String status) {
         if ("ACCEPT".equals(status)) {
             try {
@@ -259,6 +371,16 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for creating Chat
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param login    User login
+     * @param chatName Created chat name
+     * 
+     * @return Response
+     * 
+     */
     public String REQ_CRT_CHAT(String login, String chatName) {
         if (!isAuth)
             return "ANS_CRT_CHAT-DENIED-ERROR";
@@ -289,6 +411,17 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for inviting users to chat
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param sendingLogin User login
+     * @param chatName     Selected chat name
+     * @param usersToAdd   Array of logins of users that should be added to the chat
+     * 
+     * @return Response
+     * 
+     */
     public String REQ_ADD_CHAT(String chatName, String sendingLogin, String[] usersToAdd) {
         if (!isAuth)
             return "ANS_ADD_CHAT-DENIED-ERROR";
@@ -319,6 +452,17 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for changing chat name
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param login       User login
+     * @param oldChatName Old chat name
+     * @param newChatName New chat name
+     * 
+     * @return Response
+     * 
+     */
     public String REQ_CHAN_CHAT_NAME(String login, String oldChatName, String newChatName) {
         if (!isAuth)
             return "ANS_CHAN_CHAT_NAME-ERROR";
@@ -343,6 +487,18 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for changing members rank in the chat
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param requestingLogin Sender user login
+     * @param chatName        Selected chat name
+     * @param changedLogin    Target user login
+     * @param rank            New rank; Can be either ADMIN or USER
+     * 
+     * @return Response
+     * 
+     */
     public String REQ_CHAN_CHAT_RANK(String chatName, String requestingLogin, String changedLogin, String rank) {
         if (!isAuth)
             return "ANS_CHAN_CHAT_RANK-DENIED-ERROR";
@@ -369,6 +525,17 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for removing Users from Chat
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param sendingLogin  User login
+     * @param chatName      Created chat name
+     * @param usersToRemove Array of logins of users that should be removed from the
+     *                      chat
+     * @return Response
+     * 
+     */
     public String REQ_DEL_CHAT(String chatName, String sendingLogin, String[] usersToRemove) {
         if (!isAuth)
             return "ANS_DEL_CHAT-DENIED-ERROR";
@@ -397,6 +564,16 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for destroying Chat
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param login    User login
+     * @param chatName Destroyed chat name
+     * 
+     * @return Response
+     * 
+     */
     public String REQ_DES_CHAT(String login, String chatName) {
         if (!isAuth)
             return "ANS_DES_CHAT-DENIED-ERROR";
@@ -419,6 +596,17 @@ public class Controller {
         }
     }
 
+    /**
+     * Responsible for sending messages to a chat
+     * Can be efficiently invoked only when session is Authorized
+     * 
+     * @param login    User login
+     * @param chatName Chat name
+     * @param data     Message content
+     * 
+     * @return Response
+     * 
+     */
     public String SEND_DATA(String login, String chatName, String data) {
         if (!isAuth)
             return "ANS_SEND_DATA-DENIED-ERROR";

@@ -21,6 +21,8 @@ public class DataEncryptor {
      * 
      * @param input Data to encode
      * @param key   Key used to encode input.
+     * @return Encrypted data
+     * 
      */
     public static byte[] encrypt(String input, SecretKey key) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, InvalidKeyException,
@@ -35,6 +37,7 @@ public class DataEncryptor {
      * 
      * @param cipherText Cipher to decode
      * @param key        Key used to decode input.
+     * @return Decrypted data
      */
     public static String decrypt(byte[] cipherText, SecretKey key)
             throws NoSuchPaddingException, NoSuchAlgorithmException,
