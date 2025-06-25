@@ -1,0 +1,11 @@
+com.EnderLite
+com.EnderLite.Connection
+com.EnderLite.DataController
+com.EnderLite.DataController.ApiMessages
+com.EnderLite.DataController.ApiMessages.DisassemblyClasses
+com.EnderLite.GUI.AccountCreator
+com.EnderLite.GUI.Login
+com.EnderLite.GUI.MainView
+com.EnderLite.GUI.Settings
+com.EnderLite.GUI.Utils
+com.EnderLite.Logger
