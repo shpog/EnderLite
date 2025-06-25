@@ -18,6 +18,11 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.EnderLite.Logger.Logger;
 
+
+/**
+ * Transmitter for sending messages to server (used in separate Thread)
+ * @author Micro9261
+ */
 public class Transmitter extends Thread {
     private SecretKey secretKey;
     private BlockingQueue<String> dataQueue;
@@ -28,18 +33,34 @@ public class Transmitter extends Thread {
         Security.addProvider(new BouncyCastleProvider());
     }
 
+    /**
+     * Sets queue with messages to send
+     * @param queue queue with cmd to send
+     */
     public void setDataQueue(BlockingQueue<String> queue){
         dataQueue = queue;
     }
 
+    /**
+     * sets AES key for encryption
+     * @param key AES key
+     */
     public void setSecretKey(SecretKey key){
         secretKey = key;
     }
 
+    /**
+     * sets OutputStream from socket
+     * @param stream output stream from connected socket
+     */
     public void setDataOutputStream(DataOutputStream stream){
         outStream = stream;
     }
 
+    /**
+     * Encrypts and send cmd to server in infinite loop.
+     * If interrupted, end loop
+     */
     @Override
     public void run(){
         initCipher();
@@ -79,6 +100,9 @@ public class Transmitter extends Thread {
         Logger.getLogger().logInfo("Transmitter shutdown!");
     }
 
+    /**
+     * Inits Cipher for decryption purpose
+     */
     private void initCipher(){
         try {
             cipher = Cipher.getInstance("AES", "BC");

@@ -4,6 +4,10 @@ import com.EnderLite.DataController.ApiMessages.DisassemblerInterFace;
 import com.EnderLite.DataController.ApiMessages.Message;
 import com.EnderLite.DataController.ApiMessages.ResponseStatus;
 
+/**
+ * Dissasembler of responses that returns status only
+ * @author Micro9261
+ */
 public class StatusDisassembler implements DisassemblerInterFace{
     
     @Override

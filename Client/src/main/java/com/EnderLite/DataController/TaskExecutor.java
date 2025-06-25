@@ -12,28 +12,54 @@ import com.EnderLite.Logger.Logger;
 import javafx.application.Platform;
 import javafx.util.Pair;
 
+/**
+ * Used to execute pending task received and filled by receiver
+ * Used in Thread
+ * @author Micro9261
+ */
 public class TaskExecutor extends Thread{
     private ConcurrentLinkedQueue< Pair<ResponseType, Message> > pendingMessages;
     private DataController dataController;
     private long interval;
     private boolean shutdown = false;
 
+    /**
+     * Sets DataController.
+     * Needed to handle action
+     * @param controller instance of DataController
+     */
     public void setDataController(DataController controller){
         dataController = controller;
     }
 
+    /**
+     * Sets pending list that will be checked
+     * @param queue pending messages queue
+     */
     public void setPendingQueue(ConcurrentLinkedQueue< Pair<ResponseType, Message> > queue){
         pendingMessages = queue;
     }
 
+    /**
+     * Sets interval after which TaskExecutor wakes up and check queue.
+     * After checking and responding to queue chenges TaskExecutor sleeps for time given in interval.
+     * @param interval amaount of time in miliseconds
+     */
     public void setInterval(long interval){
         this.interval = interval;
     }
 
+    /**
+     * Information for TaskExecutor to end infinite loop
+     */
     public void shutdown(){
         shutdown = true;
     }
 
+    /**
+     * Wakes up after given interval, check queue and respond to message changes.
+     * After that goes to sleep again. Interrupt or use shutdown() to end infinite loop.
+     */
     @Override
     public void run(){
         Logger.getLogger().logInfo("Started(task executor)");
@@ -65,6 +91,11 @@ public class TaskExecutor extends Thread{
         Logger.getLogger().logInfo("Ended (task executor)");
     }    
 
+    /**
+     * Command executor
+     * @param actionType action enum type
+     * @param mesg filled message
+     */
     private void executeAction(ResponseType actionType, Message mesg){
         switch (actionType) {
             case AUTH_STATUS:

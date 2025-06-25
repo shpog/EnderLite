@@ -35,6 +35,11 @@ import com.EnderLite.Logger.Logger;
 
 import javafx.util.Pair;
 
+/**
+ * Receiver for getting messages from server (used in separate Thread)
+ * @author Micro9261
+ */
+
 public class Receiver extends Thread{
     private ConcurrentLinkedQueue< Pair<ResponseType, Message> > pendingMessages;
     private SecretKey secretKey;
@@ -66,18 +71,34 @@ public class Receiver extends Thread{
         responseMap.put("CMD_ADD_CHAT-", new Pair<>(ResponseType.CHAT_ADD_CMD, new InviteDisassembler()) );
     }
 
+    /**
+     * Sets queue with pending messages
+     * @param queue pending messages queue
+     */
     public void setDataQueue(ConcurrentLinkedQueue< Pair<ResponseType, Message> > queue){
         pendingMessages = queue;
     }
 
+    /**
+     * sets AES key for decryption
+     * @param key AES key
+     */
     public void setSecretKey(SecretKey key){
         secretKey = key;
     }
 
+    /**
+     * sets InputStream from socket
+     * @param stream input stream from connected socket
+     */
     public void setDataInputStream(DataInputStream stream){
         inStream = stream;
     }
 
+    /**
+     * Reads, decrypt and fill responses in infinite loop.
+     * If interrupted or dissconnect cmd received, ends execution.
+     */
     @Override
     public void run(){
         shutdown = false;
@@ -115,6 +136,9 @@ public class Receiver extends Thread{
         Logger.getLogger().logInfo("Receiver shutdown!");
     }
 
+    /**
+     * Inits Cipher for decryption purpose
+     */
     private void initCipher(){
         try {
             cipher = Cipher.getInstance("AES", "BC");
@@ -130,6 +154,10 @@ public class Receiver extends Thread{
         }
     }
 
+    /**
+     * Adds or fills reponses in pending messages queues
+     * @param message decrypted message
+     */
     private void fillResponse(String message){
         int cmdEndIndex = message.indexOf("-");
         

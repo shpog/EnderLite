@@ -26,51 +26,132 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.EnderLite.Logger.Logger;
 
+/**
+ * Dummy server for testing purposes
+ * @author Micro9261
+ */
 public class DummyServer extends Thread{
+    /**
+     * Port number used by server
+     */
     public int port_num;
+    /**
+     * Indicates if disconnect after handshake
+     */
     public boolean handshakeOnly;
+    /**
+     * Stores server socket
+     */
     public ServerSocket serverSocket;
+    /**
+     * Stores open socket
+     */
     public Socket socket;
+    /**
+     * DataInputStream from open socket
+     */
     public DataInputStream socIn;
+    /**
+     * DataOutputStream from open socket
+     */
     public DataOutputStream socOut;
+    /**
+     * Stores first sent message while handshake in progress
+     */
     public volatile String handshakeFirstMessage;
+    /**
+     * Stores second received message while handshake in progress
+     */
     public volatile String handshakeSecondMessage;
+    /**
+     * Stores third sent message while handshake in progress
+     */
     public volatile String handshakeThirdMessage;
+    /**
+     * Indicates if connection established and AES keys exchanged
+     */
     public volatile boolean handshakeAccepted;
+    /**
+     * AES key for decryption and encryption
+     */
     public volatile SecretKey secretKey;
+    /**
+     * Cipher in decrypt mode
+     */
     public Cipher cipherAfter;
+    /**
+     * Cipher in encrypt mode
+     */
     public Cipher cipherAfterEncrypt;
+    /**
+     * Cmd mode indicator
+     */
     public boolean cmdMode;
+    /**
+     * sets rejection version response
+     */
     public boolean good = false;
+    /**
+     * Stores cmd to send in cmd Mode
+     */
     public String cmd;
+    /**
+     * used to send cmd to client
+     */
     public volatile boolean fire;
 
 
+    /**
+     * Constructor 
+     * @param port set port for server access
+     * @param handshakeOnly if true connection ends on handshake
+     */
     public DummyServer(int port, boolean handshakeOnly){
         this.port_num = port;
         this.handshakeOnly = handshakeOnly;
     }
 
+    /**
+     * select different rejection status to true
+     */
     public void setAccepted(){
         good = true;
     }
 
+    /**
+     * select different rejection status to false
+     */
     public void setDenied(){
         good = false;
     }
 
+    /**
+     * Sets server to cmd send mode
+     * @param mode if true server is set in cmd set mode
+     */
     public void setCmdMode(boolean mode){
         cmdMode = mode;
     }
 
+    /**
+     * Used to send cmd to client
+     * @param cmd cmd name
+     */
     public void sendCmd(String cmd){
         this.cmd = new String(cmd);
     }
 
+    /**
+     * fires cmd set with sendCmd method
+     */
     public void fireCmd(){
         fire = true;
     }
 
+    /**
+     * Used to open server after config
+     * @return true if connection established, false otherwise
+     */
     public boolean openServer(){
         try {
             serverSocket = new ServerSocket(this.port_num);
@@ -85,6 +166,9 @@ public class DummyServer extends Thread{
          return true;
     }
 
+    /**
+     * Closes server and socket streams
+     */
     public void closeServer(){
         try{
             if (socket.isClosed() == false) {
@@ -100,10 +184,17 @@ public class DummyServer extends Thread{
         }
     }
 
+    /**
+     * Used to set handshakeOnly mode to true
+     */
     public void setOnlyHandshake(){
         this.handshakeOnly = true;
     }
 
+    /**
+     * Reads bytes
+     * @return read bytes
+     */
     public byte[] readBytes(){
         byte[] buffer = null;
         try{
@@ -115,6 +206,10 @@ public class DummyServer extends Thread{
         return buffer;
     }
 
+    /**
+     * Sends bytes 
+     * @param buffer bytes to be send
+     */
     public void sendBytes(byte[] buffer){
         try{
             socOut.writeLong(buffer.length);
@@ -124,6 +219,10 @@ public class DummyServer extends Thread{
         }
     }
 
+    /**
+     * Checks if connection established
+     * @return true if connection established
+     */
     public boolean handshakeTest(){
         Security.addProvider(new BouncyCastleProvider());
 
@@ -193,6 +292,9 @@ public class DummyServer extends Thread{
         return true;
     }
 
+    /**
+     * Starts dummy server
+     */
     @Override
     public void run(){
         while (openServer() == false){
@@ -251,6 +353,10 @@ public class DummyServer extends Thread{
         System.out.println("Server shutdown!");
     }
 
+    /**
+     * Read bytes from socket input and decryptes messsage
+     * @return message in decrypted String format
+     */
     public String readAndDecipher(){
         byte[] encrypteddMessage = null;
             
@@ -275,6 +381,9 @@ public class DummyServer extends Thread{
         return new String(decryptedMessage);
     }
 
+    /**
+     * Inits ciphers for server
+     */
     private void initCipher(){
         try {
             cipherAfter = Cipher.getInstance("AES", "BC");
@@ -292,6 +401,10 @@ public class DummyServer extends Thread{
         }
     }
 
+    /**
+     * Encrypts String and send to server
+     * @param message cmd that will be send to server
+     */
     public void encryptAndSend(String message){
 
         //encrypt
@@ -311,6 +424,12 @@ public class DummyServer extends Thread{
         }
     }
 
+    /**
+     * Test cases for client
+     * @param cmd message designator
+     * @param args message arguments
+     * @return
+     */
     public String prepareResponse(String cmd, String args){
         String[] argsParts = args.split("-");
         String result = null;

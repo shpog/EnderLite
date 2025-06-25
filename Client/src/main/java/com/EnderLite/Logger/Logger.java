@@ -4,6 +4,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+
+/**
+ * Logger for storing error and info status
+ * Writes info to file 'log.txt' and outputs in console
+ * @author Micro9261
+ */
 public class Logger {
     private static volatile Logger instance;
     private final String infoType = "[LOG] ";
@@ -23,6 +29,10 @@ public class Logger {
 
     }
 
+    /**
+     * Used to get Logger instance (singleton)
+     * @return Logger instance
+     */
     public static Logger getLogger(){
         if (instance != null){
             return instance;
@@ -36,6 +46,10 @@ public class Logger {
         }
     }
 
+    /**
+     * Used to log informations that not interrupt program runtime
+     * @param info message to write
+     */
     synchronized public void logInfo(String info){
         String mesg = infoType + info;
 
@@ -49,6 +63,10 @@ public class Logger {
         }
     }
 
+    /**
+     * Used to log error that interrupt program runtime
+     * @param error
+     */
     synchronized public void logError(String error){
         String mesg = errorType + error;
         cmdOut.println(mesg);

@@ -38,6 +38,10 @@ import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
+/**
+ * Class for JavaFX to controll main view in client
+ * @author Micro9261
+ */
 public class MainViewController {
     
     //chats segment (left)
@@ -68,6 +72,9 @@ public class MainViewController {
     @FXML
     private Button addFriendButton;
 
+    /**
+     * Initializes everything to default
+     */
     @FXML
     public void initialize(){
         settingsButton.setVisible(false);
@@ -223,9 +230,16 @@ public class MainViewController {
         addChat.setOnMouseClicked(chatAdd);
     }
 
+    /**
+     * Class used for creating chats cells with add user buttons
+     */
     class ChatsCell extends ListCell<ChatData> {
         private Window window;
 
+        /**
+         * Used to get actual window parameter need for button function
+         * @param window
+         */
         ChatsCell(Window window){
             this.window = window;
         }
@@ -295,6 +309,9 @@ public class MainViewController {
         }
     }
 
+    /**
+     * Class used for creating friends cells with add user to chat and delete buttons
+     */
     static class FriendsCell extends ListCell<String> {
 
         @Override
@@ -349,6 +366,13 @@ public class MainViewController {
         }
     }
 
+    /**
+     * Used to print message in client
+     * @param message text to send
+     * @param login user nickname
+     * @param time time of sending
+     * @param user indicates if user of given client send message (true) or other (false)
+     */
     public void addMessage(String message, String login, String time, boolean user){
         Label loginLabel = new Label(login);
         Text text = new Text(message);
@@ -371,10 +395,18 @@ public class MainViewController {
         chatScrollPane.setVvalue(1.0);
     }
 
+    /**
+     * used to clear chats while changing chats
+     */
     public void clearChat(){
         messContVBox.getChildren().clear();
     }
 
+    /**
+     * Popups notification and hides after 1 second
+     * @param text message to appear
+     * @param hideAfterTime if true notification will hide after 1 second otherwise it will stay forever
+     */
     public void notification(String text, boolean hideAfterTime){
         final Popup popup = new Popup();
         popup.setX(addFriendButton.getScene().getWindow().getWidth()/2 + 400);
@@ -402,6 +434,11 @@ public class MainViewController {
         
     }
 
+    /**
+     * Used to send friend request accept or deny notification.
+     * Waits until user select to accept or deny.
+     * @param login user name that invites
+     */
     public void addNotification(String login){
         final Popup popup = new Popup();
         popup.setX(addFriendButton.getScene().getWindow().getWidth()/2 + 400);
@@ -443,6 +480,9 @@ public class MainViewController {
         deny.setOnMouseClicked(denied);
     }
 
+    /**
+     * Exits everything with emergency notification
+     */
     public void emergencyExit(){
         final Popup popup = new Popup();
         popup.setX(addFriendButton.getScene().getWindow().getWidth()/2 + 400);

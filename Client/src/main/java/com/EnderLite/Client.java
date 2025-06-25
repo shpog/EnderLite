@@ -10,8 +10,16 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * Main application class
+ * @author Micro9261
+ */
 public class Client extends Application {
 
+    /**
+     * Lunch application in JavaFX
+     * @param args parameters from console
+     */
     public static void main(String[] args){
         launch(args);
     }
@@ -26,6 +34,10 @@ public class Client extends Application {
         primaryStage.show();       
     }
 
+    /**
+     * Sets default name to all client stages
+     * @param stage target stage for modification
+     */
     public static void setDefaultStageParam(Stage stage){
         stage.setTitle("EnderLite");
         stage.setResizable(false);

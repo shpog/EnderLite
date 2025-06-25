@@ -1,5 +1,9 @@
 package com.EnderLite.DataController.ApiMessages;
 
+/**
+ * Response types (commands) for API
+ * @author Micro9261
+ */
 public enum ResponseType {
     AUTH_STATUS,
     CREATE_USER,

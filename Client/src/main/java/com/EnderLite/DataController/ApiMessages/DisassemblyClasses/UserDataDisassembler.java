@@ -8,6 +8,10 @@ import com.EnderLite.DataController.ApiMessages.DisassemblerInterFace;
 import com.EnderLite.DataController.ApiMessages.Message;
 import com.EnderLite.DataController.ApiMessages.ResponseStatus;
 
+/**
+ * Dissasembler of get user data request
+ * @author Micro9261
+ */
 public class UserDataDisassembler implements DisassemblerInterFace{
     
     @Override

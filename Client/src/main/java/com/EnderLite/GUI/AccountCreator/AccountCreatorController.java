@@ -23,6 +23,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
+/**
+ * Class for JavaFX to controll create account view in client
+ * @author Micro9261
+ */
 public class AccountCreatorController {
 
     //erros
@@ -57,6 +61,9 @@ public class AccountCreatorController {
 
     private boolean connectionEstablished = false;
 
+    /**
+     * Initializes everything to default
+     */
     @FXML
     public void initialize(){
         connectionEstablished = false;

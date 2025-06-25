@@ -1,5 +1,10 @@
 package com.EnderLite.Connection;
 
+/**
+ * Connection controller is class used for connectivity between client and server
+ * @author Micro9261
+ */
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -26,6 +31,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.EnderLite.Logger.Logger;
 
+/**
+ * Connectivity class
+ */
 public final class  ConnectionController {
     private InetAddress ipAddress;
     private int port_num;
@@ -34,10 +42,20 @@ public final class  ConnectionController {
     private DataOutputStream outStream;
     private SecretKey secretKey;
 
+    /**
+     * Constructor that sets connection parameters
+     * @param host socket host name
+     * @param port socekt port number
+     */
     public ConnectionController(String host, int port){
         this.configureConnection(host, port);
     }
 
+    /**
+     * Used to configure connection
+     * @param host socket host name
+     * @param port socket port number
+     */
     public void configureConnection(String host, int port){
         try{
             ipAddress = InetAddress.getByName(host);
@@ -47,6 +65,10 @@ public final class  ConnectionController {
         }
     }
 
+    /**
+     * Used to establish connection and exchange AES key
+     * @return true if connection established, false otherwise
+     */
     public boolean establishConnection(){
         //default parameters 
         if (ipAddress == null){
@@ -69,13 +91,20 @@ public final class  ConnectionController {
         return handshake();
     }
 
+    /**
+     * Returns copy of AESKey
+     * @return AES key copy
+     */
     public SecretKey getAESKey(){
         byte[] keyBytes = secretKey.getEncoded();
         String algorithm = secretKey.getAlgorithm();
 
         return new SecretKeySpec(keyBytes, algorithm);
     }
-
+    /**
+     * Closes all socket streams and socket itself
+     * @throws IOException if error while closing
+     */
     public void closeStreams() throws IOException{
         try{
             inStream.close();
@@ -86,6 +115,11 @@ public final class  ConnectionController {
         }
     }
 
+    /**
+     * Used to get socket InputStream
+     * @return DataInputStream bind to socket connected to server
+     * @throws IOException
+     */
     public DataInputStream getDataInputStream() throws IOException{
         if (socket == null){
             Logger.getLogger().logError("Socket not open! (ConnectionController)");
@@ -95,6 +129,11 @@ public final class  ConnectionController {
         return inStream;
     }
 
+    /**
+     * Used to get OutputStream
+     * @return DataOutputStream bind to socket connected to server
+     * @throws IOException
+     */
     public DataOutputStream getDataOutputStream() throws IOException{
         if (socket == null){
             Logger.getLogger().logError("Socket not open! (ConnectionController)");
@@ -103,7 +142,11 @@ public final class  ConnectionController {
 
         return outStream;
     }
-    
+
+    /**
+     * Used to verify server connection and exchange AESKey
+     * @return true if connection established, false otherwise
+     */
     private boolean handshake(){
         try{
             Security.addProvider(new BouncyCastleProvider());

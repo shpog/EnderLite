@@ -4,6 +4,10 @@ import com.EnderLite.DataController.ApiMessages.DisassemblerInterFace;
 import com.EnderLite.DataController.ApiMessages.Message;
 import com.EnderLite.DataController.ApiMessages.ResponseStatus;
 
+/**
+ * Dissasembler of destroy chat command
+ * @author Micro9261
+ */
 public class CmdDestroyChat implements DisassemblerInterFace{
 
     @Override

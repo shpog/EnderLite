@@ -7,6 +7,10 @@ import com.EnderLite.DataController.ApiMessages.DisassemblerInterFace;
 import com.EnderLite.DataController.ApiMessages.Message;
 import com.EnderLite.DataController.ApiMessages.ResponseStatus;
 
+/**
+ * Dissasembler of message request
+ * @author Micro9261
+ */
 public class MessageDisassembler implements DisassemblerInterFace{
     
     @Override
